@@ -146,9 +146,8 @@ export default function ProcurementPortalLayout({
     <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-[#ed2025] selection:text-white">
       {/* ================= LEFT SIDEBAR (DARK NAVY / RED ACCENT) ================= */}
       <aside
-        className={`${
-          sidebarCollapsed ? "w-20" : "w-64"
-        } bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
+        className={`${sidebarCollapsed ? "w-20" : "w-64"
+          } bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Top Brand Header */}
@@ -167,7 +166,7 @@ export default function ProcurementPortalLayout({
                     <span className="text-[#ed2025]">ly</span>
                   </div>
                   <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-1 leading-tight">
-                    PROCUREMENT SOURCING DESK
+                    PROCUREMENT
                   </div>
                 </div>
               )}
@@ -187,9 +186,8 @@ export default function ProcurementPortalLayout({
           <div className="p-3">
             <Link
               href="/procurement/queue"
-              className={`w-full py-3 px-3 rounded-2xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-red-950/40 transition ${
-                sidebarCollapsed ? "px-0 text-center" : ""
-              }`}
+              className={`w-full py-3 px-3 rounded-2xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-red-950/40 transition ${sidebarCollapsed ? "px-0 text-center" : ""
+                }`}
             >
               <Compass className="w-4 h-4 stroke-[2.5] flex-shrink-0" />
               {!sidebarCollapsed && <span>OPEN SOURCING QUEUE</span>}
@@ -214,19 +212,16 @@ export default function ProcurementPortalLayout({
                       <Link
                         key={nav.label}
                         href={nav.href}
-                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition ${
-                          sidebarCollapsed ? "justify-center" : ""
-                        } ${
-                          isActive
+                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition ${sidebarCollapsed ? "justify-center" : ""
+                          } ${isActive
                             ? "bg-slate-800/90 text-white font-bold shadow-xs border-l-4 border-[#ed2025] pl-3"
                             : "text-slate-300 hover:text-white hover:bg-slate-800/40 font-medium"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <Icon
-                            className={`w-4 h-4 transition flex-shrink-0 ${
-                              isActive ? "text-[#ed2025]" : "text-slate-400"
-                            }`}
+                            className={`w-4 h-4 transition flex-shrink-0 ${isActive ? "text-[#ed2025]" : "text-slate-400"
+                              }`}
                           />
                           {!sidebarCollapsed && (
                             <span className="truncate">{nav.label}</span>
@@ -235,9 +230,8 @@ export default function ProcurementPortalLayout({
 
                         {!sidebarCollapsed && nav.badge !== undefined && (
                           <span
-                            className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center text-white flex-shrink-0 ${
-                              nav.badgeColor || "bg-slate-700"
-                            }`}
+                            className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center text-white flex-shrink-0 ${nav.badgeColor || "bg-slate-700"
+                              }`}
                           >
                             {nav.badge}
                           </span>
