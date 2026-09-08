@@ -9,7 +9,6 @@ import {
   Anchor,
   Box,
   MapPin,
-  Clock,
   ShieldCheck,
   AlertTriangle,
   FileCheck,
@@ -29,9 +28,6 @@ import {
   LucideIcon,
   Compass,
   LayoutDashboard,
-  BarChart3,
-  FileText,
-  Briefcase,
   CheckCircle2,
 } from "lucide-react";
 import { getStoredRequests, subscribeToStore, setActiveRole } from "@/lib/store";
@@ -153,15 +149,6 @@ export default function OperationsLayout({
           badge: customsHoldsCount > 0 ? `${customsHoldsCount} Holds` : undefined,
           badgeColor: "bg-rose-600",
         },
-      ],
-    },
-    {
-      group: "SHARED WORKSPACE",
-      items: [
-        { label: "Global Request Queue", href: "/admin/requests", icon: Briefcase },
-        { label: "Request Workspace", href: "/portal/requests", icon: FileText },
-        { label: "Audit History", href: "/admin/audit", icon: Clock },
-        { label: "Reporting", href: "/admin/reports", icon: BarChart3 },
       ],
     },
   ];
