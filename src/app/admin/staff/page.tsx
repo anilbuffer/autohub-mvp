@@ -22,6 +22,11 @@ import {
   Phone,
   Mail,
   Building,
+  Building2,
+  Compass,
+  Truck,
+  Banknote,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   getStoredStaffUsers,
@@ -37,20 +42,100 @@ import { StaffUser, UserRole } from "@/lib/types";
 const ROLE_DEFINITIONS: {
   id: UserRole;
   label: string;
+  shortLabel: string;
+  subtitle: string;
   badgeColor: string;
+  cardBg: string;
+  borderColor: string;
+  icon: any;
+  portalPath: string;
   description: string;
+  boundaries: string[];
 }[] = [
   {
     id: "ADMIN",
     label: "Autohub Administrator",
+    shortLabel: "Admin",
+    subtitle: "Governance & Operations Desk",
     badgeColor: "bg-red-100 text-red-800 border-red-200",
-    description: "Full operational access across all 18 MVP Phase-1 modules: part requests, supplier quotes, customer quotes, freight tariffs, procurement POs, shipment tracking, payment verification, audit logs, and system settings.",
+    cardBg: "bg-red-50/40",
+    borderColor: "border-red-200/80",
+    icon: Shield,
+    portalPath: "/admin",
+    description: "Full administrative, compliance, and operational governance across all 18 platform modules.",
+    boundaries: [
+      "Staff credential provisioning & RBAC role assignments",
+      "Global platform settings & audit trail log management",
+      "Customer trade account verification & landed quote overrides",
+    ],
   },
   {
     id: "CUSTOMER",
     label: "Trade Customer",
+    shortLabel: "Customer",
+    subtitle: "Self-Service Portal",
     badgeColor: "bg-blue-100 text-blue-800 border-blue-200",
-    description: "Trade customer ordering access, part requests submission, quote review and freight selection, invoice receipts, and direct messaging.",
+    cardBg: "bg-blue-50/40",
+    borderColor: "border-blue-200/80",
+    icon: Building2,
+    portalPath: "/portal",
+    description: "Trade workshop ordering access, landed quote reviews, and direct order tracking.",
+    boundaries: [
+      "Submit VIN/OEM part RFQs & attach vehicle details",
+      "Select Air Express or Sea Freight options & place orders",
+      "View tax invoices & direct message support team",
+    ],
+  },
+  {
+    id: "PROCUREMENT",
+    label: "Procurement Specialist",
+    shortLabel: "Procurement",
+    subtitle: "Global Sourcing Desk",
+    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+    cardBg: "bg-amber-50/40",
+    borderColor: "border-amber-200/80",
+    icon: Compass,
+    portalPath: "/procurement",
+    description: "Overseas supplier sourcing, foreign exchange conversions, and supplier PO management.",
+    boundaries: [
+      "Triage incoming RFQs & source JDM / Euro OEM parts",
+      "Capture JPY, EUR, USD supplier quotes with FX conversion",
+      "Issue supplier purchase orders & manage supplier directory",
+    ],
+  },
+  {
+    id: "OPERATIONS",
+    label: "Logistics Coordinator",
+    shortLabel: "Operations",
+    subtitle: "Freight & Port Logistics Desk",
+    badgeColor: "bg-cyan-100 text-cyan-800 border-cyan-200",
+    cardBg: "bg-cyan-50/40",
+    borderColor: "border-cyan-200/80",
+    icon: Truck,
+    portalPath: "/operations",
+    description: "International freight schedule management, port dispatch, biosecurity & customs clearance.",
+    boundaries: [
+      "Maintain Air Express & Sea Freight tariff rate matrices",
+      "Update 6-stage shipment tracking milestones & ETA dates",
+      "Manage MPI biosecurity clearance & NZ Customs handovers",
+    ],
+  },
+  {
+    id: "FINANCE",
+    label: "Finance Officer",
+    shortLabel: "Finance",
+    subtitle: "Billing & Treasury Governance",
+    badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    cardBg: "bg-emerald-50/40",
+    borderColor: "border-emerald-200/80",
+    icon: Banknote,
+    portalPath: "/finance",
+    description: "Payment verification, ANZ bank remittance matching, tax invoicing, and credit limits.",
+    boundaries: [
+      "Verify ANZ bank wire remittances & issue receipts",
+      "Approve trade credit facility limits ($10k-$50k Net 20th)",
+      "Generate monthly Tax Invoices & monitor credit ledgers",
+    ],
   },
 ];
 
@@ -266,34 +351,77 @@ export default function StaffManagementPage() {
       </div>
 
       {/* Role Definitions Guide Card */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-            <Shield className="w-4 h-4 text-[#ed2025]" />
-            <span>System Roles &amp; Authority Boundaries</span>
-          </h3>
-          <span className="text-[11px] text-slate-400">Granular Role-Based Access Control (RBAC)</span>
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#ed2025]" />
+              <span>Five System Roles &amp; Authority Boundaries</span>
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Granular Role-Based Access Control (RBAC) defining operational boundaries across all five platform portals
+            </p>
+          </div>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full w-fit">
+            5 Core System Roles
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-          {ROLE_DEFINITIONS.map((r) => (
-            <div
-              key={r.id}
-              className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-1.5 text-xs flex flex-col justify-between"
-            >
-              <div>
-                <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.badgeColor}`}>
-                  {r.label}
-                </span>
-                <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-                  {r.description}
-                </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
+          {ROLE_DEFINITIONS.map((r) => {
+            const Icon = r.icon;
+            return (
+              <div
+                key={r.id}
+                className={`p-4 rounded-2xl border ${r.borderColor} ${r.cardBg} space-y-3 text-xs flex flex-col justify-between hover:shadow-xs transition duration-200`}
+              >
+                <div className="space-y-2.5">
+                  <div className="flex items-start justify-between gap-1.5">
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.badgeColor}`}>
+                      <Icon className="w-3 h-3" />
+                      <span>{r.label}</span>
+                    </span>
+                    <Link
+                      href={r.portalPath}
+                      className="text-[10px] font-mono text-slate-400 hover:text-slate-700 flex items-center gap-0.5 transition"
+                      title={`View ${r.label} Portal`}
+                    >
+                      <span>{r.id}</span>
+                      <ArrowUpRight className="w-2.5 h-2.5" />
+                    </Link>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900 leading-tight">
+                      {r.subtitle}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                      {r.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Authority Boundaries
+                    </span>
+                    <ul className="space-y-1 text-[10.5px] text-slate-700">
+                      {r.boundaries.map((b, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5 leading-tight">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between border-t border-slate-200/60 text-[10px] text-slate-500 font-mono">
+                  <span>Scope:</span>
+                  <span className="font-semibold text-slate-700">{r.portalPath}</span>
+                </div>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono font-medium pt-1">
-                Role ID: {r.id}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -333,7 +461,7 @@ export default function StaffManagementPage() {
                   roleFilter === r.id ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                {r.label.split(" ")[0]}
+                {r.shortLabel}
               </button>
             ))}
           </div>
@@ -431,7 +559,7 @@ export default function StaffManagementPage() {
                         <select
                           value={user.role}
                           onChange={(e) => handleQuickRoleChange(user.id, e.target.value as UserRole)}
-                          className={`text-xs font-bold px-2.5 py-1 rounded-xl border appearance-none cursor-pointer outline-none transition ${roleDef?.badgeColor}`}
+                          className={`text-xs font-bold px-2.5 py-1 rounded-xl border appearance-none cursor-pointer outline-none transition ${roleDef?.badgeColor || "bg-slate-100 text-slate-800 border-slate-200"}`}
                           title="Change user's assigned role"
                         >
                           {ROLE_DEFINITIONS.map((r) => (

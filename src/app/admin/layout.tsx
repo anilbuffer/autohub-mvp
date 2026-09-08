@@ -160,7 +160,7 @@ export default function AdministratorLayout({
           icon: LayoutDashboard,
         },
         {
-          label: "Staff Management",
+          label: "Staff & Roles",
           href: "/admin/staff",
           icon: Users,
           badge: activeStaffCount > 0 ? activeStaffCount : undefined,
