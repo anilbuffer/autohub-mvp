@@ -38,118 +38,114 @@ export default function CustomerDashboardPage() {
     return unsub;
   }, []);
 
-  // Compute Metrics matching screenshot counts
-  const totalActiveCount = requests.length || 8;
-  const awaitingActionCount = 3;
-  const inProcurementCount = requests.filter((r) => r.status === "ORDERED_FROM_SUPPLIER" || r.status === "SOURCING").length || 1;
-  const inTransitCount = requests.filter((r) => r.status === "IN_TRANSIT" || r.status === "SUPPLIER_DISPATCHED").length || 2;
+  // Live KPI calculation from requests in store
+  const activeRequests = requests.filter((r) => r.status !== "COMPLETED" && r.status !== "CANCELLED");
+  const totalActiveCount = activeRequests.length;
 
-  // Specific Action Required Items matching screenshot:
-  const actionItems = [
-    {
-      ref: "AH-P-000138",
-      reqId: "REQ-000138",
-      vehicle: "Toyota Hiace - 2019",
-      part: "Left Front Lower Control Arm",
-      status: "Quote Ready",
-      statusType: "amber",
-      amount: "$485.00",
-      buttonText: "REVIEW QUOTE →",
-      targetPath: "/portal/requests/REQ-000138",
-    },
-    {
-      ref: "AH-P-000123",
-      reqId: "REQ-000123",
-      vehicle: "Toyota Hiace - 2019",
-      part: "Left Front Lower Control Arm",
-      status: "Quote Ready",
-      statusType: "amber",
-      amount: "$485.00",
-      buttonText: "PAY NOW →",
-      targetPath: "/portal/requests/REQ-000123",
-    },
-    {
-      ref: "AH-P-000119",
-      reqId: "REQ-000119",
-      vehicle: "Mazda CX-5 - 2021",
-      part: "Front Headlamp (LED Projector RHS)",
-      status: "Payment Failed",
-      statusType: "rose",
-      amount: "$650.00",
-      buttonText: "RETRY PAYMENT →",
-      targetPath: "/portal/requests/REQ-000119",
-    },
-  ];
+  const awaitingActionRequests = requests.filter(
+    (r) =>
+      r.status === "AWAITING_CUSTOMER_APPROVAL" ||
+      r.status === "AWAITING_PAYMENT" ||
+      r.status === "PAYMENT_DISPUTED"
+  );
+  const awaitingActionCount = awaitingActionRequests.length;
 
-  // Specific Recent Requests matching table in screenshot:
-  const recentRequests = [
-    {
-      ref: "AH-P-000139",
-      reqId: "REQ-000139",
-      vehicle: "Toyota Hiace 2019",
-      part: "Left Front Lower Control Arm",
-      status: "Delivered",
-      statusColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      dotColor: "bg-emerald-500",
-      value: "$485.00",
-      date: "1 Sept 2026",
-    },
-    {
-      ref: "AH-P-000138",
-      reqId: "REQ-000138",
-      vehicle: "Toyota Hiace 2019",
-      part: "Left Front Lower Control Arm",
-      status: "Quote Ready",
-      statusColor: "bg-amber-50 text-amber-700 border-amber-200",
-      dotColor: "bg-amber-500",
-      value: "$485.00",
-      date: "31 Aug 2026",
-    },
-    {
-      ref: "AH-P-000123",
-      reqId: "REQ-000123",
-      vehicle: "Toyota Hiace 2019",
-      part: "Left Front Lower Control Arm",
-      status: "Quote Ready",
-      statusColor: "bg-amber-50 text-amber-700 border-amber-200",
-      dotColor: "bg-amber-500",
-      value: "$485.00",
-      date: "28 Aug 2026",
-    },
-    {
-      ref: "AH-P-000124",
-      reqId: "REQ-000124",
-      vehicle: "Ford Ranger 2022",
-      part: "Bi-Turbo Intercooler Core & Boost Hose Kit",
-      status: "Customer Approved",
-      statusColor: "bg-indigo-50 text-indigo-700 border-indigo-200",
-      dotColor: "bg-indigo-500",
-      value: "$1,280.00",
-      date: "27 Aug 2026",
-    },
-    {
-      ref: "AH-P-000120",
-      reqId: "REQ-000120",
-      vehicle: "Honda Civic Type-R 2021",
-      part: "Electric Power Steering Rack & Pinion Assembly",
-      status: "Ordered From Supplier",
-      statusColor: "bg-sky-50 text-sky-700 border-sky-200",
-      dotColor: "bg-sky-500",
-      value: "$1,980.00",
-      date: "23 Aug 2026",
-    },
-    {
-      ref: "AH-P-000121",
-      reqId: "REQ-000121",
-      vehicle: "Ford Ranger 2020",
-      part: "Door Mirror (RHS Power Folding)",
-      status: "In Transit",
-      statusColor: "bg-blue-50 text-blue-700 border-blue-200",
-      dotColor: "bg-blue-500",
-      value: "$720.00",
-      date: "25 Aug 2026",
-    },
-  ];
+  const inProcurementCount = requests.filter(
+    (r) => r.status === "SOURCING" || r.status === "QUOTE_PREPARED" || r.status === "ORDERED_FROM_SUPPLIER"
+  ).length;
+
+  const inTransitCount = requests.filter(
+    (r) =>
+      r.status === "SUPPLIER_DISPATCHED" ||
+      r.status === "RECEIVED_AT_SHIPPING_FACILITY" ||
+      r.status === "IN_TRANSIT" ||
+      r.status === "ARRIVED_IN_NZ" ||
+      r.status === "CUSTOMS_CLEARANCE" ||
+      r.status === "OUT_FOR_DELIVERY"
+  ).length;
+
+  const getStatusBadgeProps = (status: string) => {
+    switch (status) {
+      case "DELIVERED":
+      case "COMPLETED":
+        return { label: "Delivered", statusColor: "bg-emerald-50 text-emerald-700 border-emerald-200", dotColor: "bg-emerald-500" };
+      case "AWAITING_CUSTOMER_APPROVAL":
+      case "QUOTE_PREPARED":
+        return { label: "Quote Ready", statusColor: "bg-amber-50 text-amber-700 border-amber-200", dotColor: "bg-amber-500" };
+      case "AWAITING_PAYMENT":
+        return { label: "Awaiting Payment", statusColor: "bg-amber-50 text-amber-700 border-amber-200", dotColor: "bg-amber-500" };
+      case "PAYMENT_CONFIRMED":
+        return { label: "Approved / Paid", statusColor: "bg-indigo-50 text-indigo-700 border-indigo-200", dotColor: "bg-indigo-500" };
+      case "ORDERED_FROM_SUPPLIER":
+        return { label: "Ordered From Supplier", statusColor: "bg-sky-50 text-sky-700 border-sky-200", dotColor: "bg-sky-500" };
+      case "IN_TRANSIT":
+      case "SUPPLIER_DISPATCHED":
+      case "CUSTOMS_CLEARANCE":
+      case "ARRIVED_IN_NZ":
+      case "RECEIVED_AT_SHIPPING_FACILITY":
+        return { label: "In Transit", statusColor: "bg-blue-50 text-blue-700 border-blue-200", dotColor: "bg-blue-500" };
+      case "OUT_FOR_DELIVERY":
+        return { label: "Out For Delivery", statusColor: "bg-purple-50 text-purple-700 border-purple-200", dotColor: "bg-purple-500" };
+      case "PAYMENT_DISPUTED":
+      case "SOURCING_EXCEPTION":
+        return { label: "Action Needed", statusColor: "bg-rose-50 text-rose-700 border-rose-200", dotColor: "bg-rose-500" };
+      default:
+        return { label: status.replace(/_/g, " "), statusColor: "bg-slate-50 text-slate-700 border-slate-200", dotColor: "bg-slate-500" };
+    }
+  };
+
+  // Dynamically derive action items from active store requests
+  const actionItems = (awaitingActionRequests.length > 0 ? awaitingActionRequests : requests.slice(0, 2)).map((r) => {
+    const isApproval = r.status === "AWAITING_CUSTOMER_APPROVAL";
+    const isPayment = r.status === "AWAITING_PAYMENT";
+    const val = r.quote?.totalNzd
+      ? `$${r.quote.totalNzd.toFixed(2)}`
+      : r.invoice?.totalNzd
+      ? `$${r.invoice.totalNzd.toFixed(2)}`
+      : "$485.00";
+
+    return {
+      ref: r.referenceNumber,
+      reqId: r.id,
+      vehicle: `${r.vehicle.make} ${r.vehicle.model} - ${r.vehicle.year}`,
+      part: r.part.partName,
+      status: isApproval ? "Quote Ready" : isPayment ? "Payment Pending" : r.status.replace(/_/g, " "),
+      statusType: isApproval || isPayment ? "amber" : "rose",
+      amount: val,
+      buttonText: isApproval ? "REVIEW QUOTE →" : isPayment ? "PAY NOW →" : "VIEW DETAILS →",
+      targetPath: `/portal/requests/${r.id}`,
+    };
+  });
+
+  // Dynamically derive recent requests table from live store
+  const recentRequests = requests.slice(0, 6).map((r) => {
+    const badge = getStatusBadgeProps(r.status);
+    const val = r.quote?.totalNzd
+      ? `$${r.quote.totalNzd.toFixed(2)}`
+      : r.invoice?.totalNzd
+      ? `$${r.invoice.totalNzd.toFixed(2)}`
+      : "$485.00";
+
+    const dateStr = r.updatedDate || r.submittedDate
+      ? new Date(r.updatedDate || r.submittedDate).toLocaleDateString("en-NZ", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "Live";
+
+    return {
+      ref: r.referenceNumber,
+      reqId: r.id,
+      vehicle: `${r.vehicle.make} ${r.vehicle.model} ${r.vehicle.year}`,
+      part: r.part.partName,
+      status: badge.label,
+      statusColor: badge.statusColor,
+      dotColor: badge.dotColor,
+      value: val,
+      date: dateStr,
+    };
+  });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -191,7 +187,7 @@ export default function CustomerDashboardPage() {
               ACTIVE REQUESTS
             </span>
             <div className="text-2xl sm:text-3xl font-black text-slate-900">
-              08
+              {totalActiveCount.toString().padStart(2, "0")}
             </div>
             <span className="text-[11px] text-slate-400 font-medium block">
               Live Synced
@@ -202,23 +198,33 @@ export default function CustomerDashboardPage() {
           </div>
         </div>
 
-        {/* Card 2: Awaiting Your Action (Highlighted Amber) */}
-        <div className="bg-amber-50/40 rounded-2xl p-5 border-2 border-amber-300 shadow-sm flex items-start justify-between relative overflow-hidden">
+        {/* Card 2: Awaiting Your Action */}
+        <div className={`rounded-2xl p-5 border-2 shadow-sm flex items-start justify-between relative overflow-hidden ${
+          awaitingActionCount > 0 ? "bg-amber-50/40 border-amber-300" : "bg-white border-slate-200/80"
+        }`}>
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider text-amber-900 block">
+              <span className={`text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block ${
+                awaitingActionCount > 0 ? "text-amber-900" : "text-slate-500"
+              }`}>
                 AWAITING YOUR ACTION
               </span>
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              {awaitingActionCount > 0 && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />}
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-950">
-              03
+            <div className={`text-2xl sm:text-3xl font-black ${
+              awaitingActionCount > 0 ? "text-amber-950" : "text-slate-900"
+            }`}>
+              {awaitingActionCount.toString().padStart(2, "0")}
             </div>
-            <span className="text-[11px] text-amber-700 font-semibold block">
-              Requires attention
+            <span className={`text-[11px] font-semibold block ${
+              awaitingActionCount > 0 ? "text-amber-700" : "text-slate-400"
+            }`}>
+              {awaitingActionCount > 0 ? "Requires attention" : "All cleared"}
             </span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            awaitingActionCount > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+          }`}>
             <Clock className="w-5 h-5" />
           </div>
         </div>
@@ -230,10 +236,10 @@ export default function CustomerDashboardPage() {
               IN PROCUREMENT
             </span>
             <div className="text-2xl sm:text-3xl font-black text-slate-900">
-              01
+              {inProcurementCount.toString().padStart(2, "0")}
             </div>
             <span className="text-[11px] text-slate-400 font-medium block">
-              Currently being processed
+              Currently processed
             </span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -248,7 +254,7 @@ export default function CustomerDashboardPage() {
               IN TRANSIT
             </span>
             <div className="text-2xl sm:text-3xl font-black text-slate-900">
-              02
+              {inTransitCount.toString().padStart(2, "0")}
             </div>
             <span className="text-[11px] text-slate-400 font-medium block">
               On the way

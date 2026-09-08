@@ -16,11 +16,34 @@ import {
   Scale,
   Activity,
   ArrowRightLeft,
-  Briefcase
+  Briefcase,
+  Plus,
+  Search,
+  HelpCircle,
+  Home,
+  Settings,
+  ChevronDown,
+  ShieldCheck,
+  User,
+  LucideIcon,
 } from "lucide-react";
 import { getStoredRequests, subscribeToStore, setActiveRole } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
 import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  badge?: number | string;
+  badgeColor?: string;
+  isModal?: boolean;
+}
+
+interface NavGroup {
+  group: string;
+  items: NavItem[];
+}
 
 export default function FinanceLayout({
   children,
@@ -30,207 +53,493 @@ export default function FinanceLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [requests, setRequests] = useState<PartRequest[]>([]);
-  const [unreconciledCount, setUnreconciledCount] = useState<number>(3);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
+
+  const refresh = () => {
+    setRequests(getStoredRequests());
+  };
 
   useEffect(() => {
-    setRequests(getStoredRequests());
-    const unsub = subscribeToStore(() => setRequests(getStoredRequests()));
+    refresh();
+    const unsub = subscribeToStore(() => refresh());
     return unsub;
   }, []);
+
+  // Keyboard shortcut for ⌘K / Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
+      }
+      if (e.key === "Escape") {
+        setSearchModalOpen(false);
+        setUserMenuOpen(false);
+        setHelpModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Live badge counts from requests in store
+  const awaitingPaymentCount = requests.filter(
+    (r) => r.status === "AWAITING_PAYMENT" || r.status === "PAYMENT_DISPUTED"
+  ).length || 3;
 
   const handleLogout = () => {
     setActiveRole("CUSTOMER");
     router.push("/login");
   };
 
-  const navItems = [
+  const getPageTitle = () => {
+    if (pathname === "/finance") return "Treasury & Clearing Console";
+    if (pathname === "/finance/payments") return "Remittance & Payment Matching";
+    if (pathname === "/finance/invoices") return "NZ IRD Tax Invoices";
+    if (pathname === "/finance/credit") return "Workshop Trade Credit Accounts";
+    if (pathname === "/finance/transactions") return "Double-Entry Transaction Ledger";
+    return "Finance Portal";
+  };
+
+  const navGroups: NavGroup[] = [
     {
-      name: "Treasury Console",
-      href: "/finance",
-      icon: Landmark,
-      badge: null,
+      group: "TREASURY DESK",
+      items: [
+        { label: "Treasury Console", href: "/finance", icon: Landmark },
+        {
+          label: "Remittance Matching",
+          href: "/finance/payments",
+          icon: CheckCircle2,
+          badge: awaitingPaymentCount > 0 ? `${awaitingPaymentCount} Pending` : undefined,
+          badgeColor: "bg-[#ed2025]",
+        },
+        { label: "Tax Invoices (IRD)", href: "/finance/invoices", icon: Receipt },
+        {
+          label: "Trade Credit Accounts",
+          href: "/finance/credit",
+          icon: Building,
+          badge: "Net 20th",
+          badgeColor: "bg-blue-600",
+        },
+        { label: "Transaction Ledger", href: "/finance/transactions", icon: FileText },
+      ],
     },
     {
-      name: "Remittance Matching",
-      href: "/finance/payments",
-      icon: CheckCircle2,
-      badge: unreconciledCount > 0 ? `${unreconciledCount} Pending` : null,
-      badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+      group: "GOVERNANCE",
+      items: [
+        { label: "All Parts Requests", href: "/admin/requests", icon: Briefcase },
+        { label: "Supplier Orders", href: "/procurement/orders", icon: Scale },
+      ],
     },
     {
-      name: "Tax Invoices (IRD)",
-      href: "/finance/invoices",
-      icon: Receipt,
-      badge: null,
-    },
-    {
-      name: "Trade Credit Accounts",
-      href: "/finance/credit",
-      icon: Building,
-      badge: "Net 20th",
-      badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    },
-    {
-      name: "Transaction Ledger",
-      href: "/finance/transactions",
-      icon: FileText,
-      badge: null,
+      group: "SUPPORT",
+      items: [
+        { label: "Finance & GST Guide", href: "#help", icon: HelpCircle, isModal: true },
+      ],
     },
   ];
 
+  // Search filtering
+  const searchResults = searchQuery.trim()
+    ? requests.filter(
+        (r) =>
+          r.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.part.partName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (r.invoice?.invoiceNumber && r.invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
+
   return (
-    <div className="min-h-screen bg-[#06110f] text-slate-100 flex flex-col antialiased">
-      {/* Top Bar for Finance Portal */}
-      <header className="h-16 border-b border-emerald-900/30 bg-[#081815]/95 backdrop-blur sticky top-0 z-40 px-4 md:px-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/finance" className="flex items-center gap-3 group">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition">
-              <Landmark className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-white tracking-wider text-base">AUTOHUB</span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  Finance
-                </span>
+    <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-[#ed2025] selection:text-white">
+      {/* ================= LEFT SIDEBAR (DARK NAVY - SYMMETRIC WITH CUSTOMER PORTAL) ================= */}
+      <aside
+        className={`bg-[#0f172a] text-slate-300 flex flex-col justify-between border-r border-slate-800/80 transition-all duration-300 z-30 sticky top-0 h-screen ${
+          sidebarCollapsed ? "w-20" : "w-64"
+        }`}
+      >
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          {/* Top Brand Header */}
+          <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-800/60">
+            <Link href="/finance" className="flex items-center gap-2.5 overflow-hidden">
+              {/* 3D Box Logo */}
+              <div className="w-8 h-8 rounded-xl bg-[#ed2025] shadow-md shadow-red-600/30 flex items-center justify-center text-white flex-shrink-0">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-4 h-4 text-white"
+                >
+                  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                  <path d="m3.3 7 8.7 5 8.7-5" />
+                  <path d="M12 22V12" />
+                </svg>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Treasury, Trade Credit & Remittance Clearing
-              </p>
-            </div>
-          </Link>
+              {!sidebarCollapsed && (
+                <div>
+                  <div className="text-base font-black tracking-tight text-white leading-none">
+                    PROCUR<span className="text-[#ed2025]">ly</span>
+                  </div>
+                  <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">
+                    FINANCE PORTAL
+                  </div>
+                </div>
+              )}
+            </Link>
 
-          {/* Bank Sync Status */}
-          <div className="hidden lg:flex items-center gap-3 ml-6 pl-6 border-l border-slate-800 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              ANZ NZ Clearing: <strong className="text-white">Connected</strong>
-            </span>
-            <span className="text-slate-600">•</span>
-            <span>IRD GST: <strong className="text-emerald-400">134-582-901</strong></span>
-          </div>
-        </div>
-
-        {/* Right tools and User Profile */}
-        <div className="flex items-center gap-3">
-          {/* Portal Switcher */}
-          <PortalNavSwitcher currentPortal="FINANCE" />
-
-          {/* Finance Officer Profile */}
-          <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
-            <div className="text-right hidden sm:block">
-              <div className="text-xs font-semibold text-white">Clara Jenkins</div>
-              <div className="text-[10px] text-emerald-400 font-medium">Finance Officer</div>
-            </div>
-            <div className="h-9 w-9 rounded-full bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xs shadow-inner">
-              CJ
-            </div>
+            {/* Collapse Toggle */}
             <button
-              onClick={handleLogout}
-              title="Sign Out"
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition"
+              type="button"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="w-7 h-7 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <LogOut className="h-4 w-4" />
+              {sidebarCollapsed ? "→" : "‹"}
             </button>
           </div>
-        </div>
-      </header>
 
-      {/* Main Layout Body */}
-      <div className="flex-1 flex">
-        {/* Left Sidebar Navigation */}
-        <aside className="w-64 bg-[#071512]/80 border-r border-emerald-900/20 p-4 hidden md:flex flex-col justify-between">
-          <div className="space-y-6">
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-3 mb-2">
-                Treasury Navigation
-              </div>
-              <nav className="space-y-1">
-                {navItems.map((item) => {
-                  const isActive =
-                    item.href === "/finance"
-                      ? pathname === "/finance"
-                      : pathname.startsWith(item.href);
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
-                        isActive
-                          ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm"
-                          : "text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon
-                          className={`h-4 w-4 ${
-                            isActive ? "text-emerald-400" : "text-slate-500"
-                          }`}
-                        />
-                        <span>{item.name}</span>
-                      </div>
-                      {item.badge && (
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${item.badgeColor}`}
+          {/* Primary Action Button */}
+          <div className="p-3 sm:p-4">
+            <Link
+              id="sidebar-match-remittances-button"
+              href="/finance/payments"
+              className={`w-full py-3 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 ${
+                sidebarCollapsed ? "px-2" : "px-4"
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 stroke-[2.5]" />
+              {!sidebarCollapsed && <span>MATCH REMITTANCES</span>}
+            </Link>
+          </div>
+
+          {/* Navigation Items by Group */}
+          <div className="px-3 py-2 space-y-6 flex-1">
+            {navGroups.map((grp) => (
+              <div key={grp.group} className="space-y-1">
+                {!sidebarCollapsed && (
+                  <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    {grp.group}
+                  </div>
+                )}
+                <div className="space-y-0.5">
+                  {grp.items.map((nav) => {
+                    const Icon = nav.icon;
+                    const isActive = pathname === nav.href;
+
+                    if (nav.isModal) {
+                      return (
+                        <button
+                          key={nav.label}
+                          type="button"
+                          onClick={() => setHelpModalOpen(true)}
+                          className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                            sidebarCollapsed ? "justify-center" : ""
+                          } text-slate-400 hover:text-white hover:bg-slate-800/60`}
                         >
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-4 h-4 text-slate-400" />
+                            {!sidebarCollapsed && <span>{nav.label}</span>}
+                          </div>
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={nav.label}
+                        href={nav.href}
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                          sidebarCollapsed ? "justify-center" : ""
+                        } ${
+                          isActive
+                            ? "bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-[#ed2025] pl-2.5"
+                            : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon
+                            className={`w-4 h-4 transition ${
+                              isActive ? "text-[#ed2025]" : "text-slate-400"
+                            }`}
+                          />
+                          {!sidebarCollapsed && <span>{nav.label}</span>}
+                        </div>
+
+                        {!sidebarCollapsed && nav.badge !== undefined && (
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${
+                              nav.badgeColor || "bg-slate-700"
+                            }`}
+                          >
+                            {nav.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom User Profile Section */}
+        <div className="p-3 sm:p-4 border-t border-slate-800/80 relative">
+          <div
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-800/60 cursor-pointer transition"
+          >
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              {/* Avatar CJ */}
+              <div className="w-8 h-8 rounded-full bg-[#ed2025] text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
+                CJ
+              </div>
+              {!sidebarCollapsed && (
+                <div className="overflow-hidden">
+                  <div className="text-xs font-bold text-white truncate leading-tight">
+                    Clara Jenkins
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    Finance Officer
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Live Financial Account Health */}
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Landmark className="h-3.5 w-3.5 text-emerald-400" />
-                  Operating Cashflow
-                </span>
-                <span className="text-[10px] text-emerald-400 font-mono">ANZ NZD</span>
-              </div>
-              <div className="space-y-2 text-[11px] text-slate-400">
-                <div className="flex items-center justify-between">
-                  <span>Available Liquidity</span>
-                  <span className="text-white font-mono font-bold">$184,250 NZD</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Unmatched Remittance</span>
-                  <span className="text-amber-400 font-mono font-bold">$5,420 NZD</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Trade Credit Drawn</span>
-                  <span className="text-cyan-400 font-mono font-bold">$42,800 NZD</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Compliance Tag */}
-            <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/30 text-xs">
-              <div className="text-emerald-300 font-semibold mb-1 flex items-center gap-1.5">
-                <Scale className="h-3.5 w-3.5" />
-                NZ IRD Compliance
-              </div>
-              <p className="text-slate-400 text-[11px] leading-relaxed">
-                All customer invoices automatically include 15% GST and IRD-prescribed seller tax registration.
-              </p>
-            </div>
+            {!sidebarCollapsed && (
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+            )}
           </div>
 
-          <div className="pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between">
-            <span>Autohub Treasury v1.4</span>
-            <span className="font-mono text-emerald-500/80">ANZ-01</span>
+          {/* User Popover Menu */}
+          {userMenuOpen && (
+            <div className="absolute bottom-16 left-3 right-3 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl space-y-1 text-xs text-slate-300 z-50 animate-scaleIn">
+              <div className="px-3 py-2 border-b border-slate-800 text-[11px]">
+                <div className="font-bold text-white">Clara Jenkins</div>
+                <div className="text-slate-400 font-mono text-[10px]">Autohub Treasury &amp; Accounts Desk</div>
+              </div>
+
+              <Link
+                href="/admin"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#ed2025]" />
+                <span>Admin Portal</span>
+              </Link>
+
+              <Link
+                href="/portal"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition"
+              >
+                <User className="w-3.5 h-3.5 text-blue-400" />
+                <span>Customer Portal</span>
+              </Link>
+
+              <div className="border-t border-slate-800/80 pt-1 mt-1">
+                <Link
+                  href="/"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
+                >
+                  <Home className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Public Website</span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* ================= RIGHT MAIN LAYOUT ================= */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        {/* Top Header Bar */}
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 min-h-[64px] py-2.5 px-4 sm:px-8 flex items-center justify-between gap-4">
+          {/* Left Title & Breadcrumbs */}
+          <div className="flex flex-col justify-center min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-0.5 leading-none">
+              <Link
+                href="/"
+                className="hover:text-slate-900 transition flex items-center gap-1 text-slate-500"
+                title="Return to Public Website"
+              >
+                <span>Home</span>
+              </Link>
+              <span className="text-slate-400">/</span>
+              <Link
+                href="/finance"
+                className="hover:text-slate-900 transition text-slate-600 font-medium"
+              >
+                Finance Portal
+              </Link>
+              <span className="text-slate-400">/</span>
+              <span className="text-[#ed2025] font-semibold truncate">
+                {getPageTitle()}
+              </span>
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-tight truncate">
+              {getPageTitle()}
+            </h1>
           </div>
-        </aside>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+            {/* Search Button */}
+            <div className="flex-1 max-w-md hidden md:block">
+              <button
+                type="button"
+                onClick={() => setSearchModalOpen(true)}
+                className="w-full py-2 pl-3.5 pr-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-left text-xs text-slate-500 flex items-center justify-between transition group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
+                  <span>Search invoices, deposits, workshops...</span>
+                </div>
+                <kbd className="px-1.5 py-0.5 rounded bg-white text-[10px] font-mono font-bold text-slate-400 shadow-sm border border-slate-200">
+                  ⌘K
+                </kbd>
+              </button>
+            </div>
+
+            {/* Portal Switcher */}
+            <PortalNavSwitcher currentPortal="finance" variant="light" />
+
+            {/* Primary Action Button */}
+            <Link
+              href="/finance/payments"
+              className="px-3.5 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
+            >
+              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden sm:inline">Match Remittance</span>
+            </Link>
+
+            {/* Help Question Icon */}
+            <button
+              type="button"
+              onClick={() => setHelpModalOpen(true)}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1 text-xs font-semibold"
+              title="Help &amp; Support"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>
+
+      {/* Global Search Modal */}
+      {searchModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-scaleIn">
+            <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+              <Search className="w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                autoFocus
+                placeholder="Search invoices, bank references, customers, or parts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-sm text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => setSearchModalOpen(false)}
+                className="px-2 py-1 rounded-lg bg-slate-100 text-slate-500 text-xs hover:bg-slate-200"
+              >
+                ESC
+              </button>
+            </div>
+
+            <div className="max-h-80 overflow-y-auto p-2">
+              {searchResults.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400">
+                  {searchQuery ? "No matching financial records found" : "Type an invoice number, customer name, or part..."}
+                </div>
+              ) : (
+                searchResults.map((r) => (
+                  <Link
+                    key={r.id}
+                    href="/finance/payments"
+                    onClick={() => setSearchModalOpen(false)}
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition text-xs"
+                  >
+                    <div>
+                      <span className="font-bold text-slate-900">{r.referenceNumber}</span>
+                      <span className="text-slate-500 mx-2">•</span>
+                      <span className="text-slate-700">{r.customerName}</span>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        {r.part.partName} {r.invoice?.invoiceNumber ? `(${r.invoice.invoiceNumber})` : ""}
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                      {r.invoice?.status || r.status.replace(/_/g, " ")}
+                    </span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help Modal */}
+      {helpModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden animate-scaleIn">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-slate-900">Finance &amp; Treasury Desk Guide</h3>
+              <button
+                type="button"
+                onClick={() => setHelpModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-5 space-y-3 text-xs text-slate-600 leading-relaxed">
+              <p>
+                <strong>Remittance Matching:</strong> Match incoming ANZ NZ direct deposits against buyer invoices. Confirmation triggers instant status sync across Customer, Procurement, and Operations.
+              </p>
+              <p>
+                <strong>NZ IRD Invoicing:</strong> All buyer invoices incorporate statutory 15% GST and registered GST # 134-582-901 for IRD audit compliance.
+              </p>
+              <p>
+                <strong>Trade Credit Facilities:</strong> Manage Net 20th Month wholesale trade lines and review drawdown limits.
+              </p>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setHelpModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] text-white text-xs font-bold transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

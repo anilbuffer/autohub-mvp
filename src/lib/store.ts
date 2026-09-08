@@ -46,11 +46,32 @@ const STORAGE_KEYS = {
   GLOBAL_AUDIT_LOGS: "autohub_procurly_global_audit_logs_v2",
 };
 
-// Simple event bus for reactivity
+// Real-time Event Bus with Multi-Tab BroadcastChannel & Storage Event Sync
 type StoreListener = () => void;
 const listeners: Set<StoreListener> = new Set();
+let syncChannel: BroadcastChannel | null = null;
 
-function notifyListeners() {
+if (typeof window !== "undefined") {
+  if (typeof BroadcastChannel !== "undefined") {
+    try {
+      syncChannel = new BroadcastChannel("autohub_procurly_sync_v2");
+      syncChannel.onmessage = () => {
+        notifyLocalListeners();
+      };
+    } catch (err) {
+      console.warn("BroadcastChannel initialization warning:", err);
+    }
+  }
+
+  // Fallback storage listener for cross-tab reactivity
+  window.addEventListener("storage", (e) => {
+    if (e.key && e.key.startsWith("autohub_procurly_")) {
+      notifyLocalListeners();
+    }
+  });
+}
+
+function notifyLocalListeners() {
   listeners.forEach((listener) => {
     try {
       listener();
@@ -58,6 +79,17 @@ function notifyListeners() {
       console.error("Store listener error:", e);
     }
   });
+}
+
+function notifyListeners(broadcast = true) {
+  notifyLocalListeners();
+  if (broadcast && syncChannel) {
+    try {
+      syncChannel.postMessage({ type: "STORE_UPDATED", timestamp: Date.now() });
+    } catch (e) {
+      console.error("BroadcastChannel message error:", e);
+    }
+  }
 }
 
 export function subscribeToStore(listener: StoreListener): () => void {

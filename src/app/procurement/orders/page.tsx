@@ -15,6 +15,7 @@ import {
   X,
   FileText,
   Search,
+  Compass,
 } from "lucide-react";
 import {
   getStoredRequests,
@@ -155,25 +156,32 @@ export default function SupplierOrdersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#ed2025]/10 text-[#ed2025] border border-[#ed2025]/20">
+              Procurement Desk
+            </span>
+            <span className="text-xs text-slate-500 font-medium">Purchase Order Management</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <CheckSquare className="w-6 h-6 text-[#ed2025]" />
             Supplier Purchase Orders &amp; Dispatch
           </h1>
-          <p className="text-xs text-slate-500">
-            Convert payment-confirmed customer orders into verified factory POs with overseas suppliers
+          <p className="text-xs text-slate-500 mt-1">
+            Convert payment-confirmed customer orders into verified factory POs with overseas suppliers.
           </p>
         </div>
 
         <Link
           href="/procurement/queue"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-800 transition shadow-2xs"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 text-xs font-bold text-slate-800 transition shadow-xs"
         >
-          <Compass className="w-4 h-4 text-amber-500" />
+          <Compass className="w-4 h-4 text-[#ed2025]" />
           <span>Sourcing Intake Queue</span>
         </Link>
       </div>
 
       {/* Search Bar */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-between">
+      <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
         <div className="relative w-full max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -181,17 +189,17 @@ export default function SupplierOrdersPage() {
             placeholder="Search POs by reference, part name, or customer..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3.5 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            className="w-full pl-10 pr-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#ed2025] focus:bg-white transition"
           />
         </div>
 
-        <span className="text-xs font-semibold text-slate-500 hidden sm:inline">
+        <span className="text-xs font-bold text-slate-500 hidden sm:inline">
           {poReadyRequests.length} Active Supplier Orders
         </span>
       </div>
 
       {/* Orders Table */}
-      <div className="rounded-3xl bg-white border border-slate-200 shadow-2xs overflow-hidden">
+      <div className="rounded-2xl bg-white border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
@@ -216,11 +224,11 @@ export default function SupplierOrdersPage() {
                   const bestQuote = req.supplierQuotes?.[0];
                   return (
                     <tr key={req.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3 px-4 font-mono font-bold text-slate-900">
+                      <td className="py-3 px-4 font-mono font-bold text-[#0f172a]">
                         {req.referenceNumber}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-semibold text-slate-900">
+                        <div className="font-bold text-slate-900">
                           {req.part.partName} ({req.part.quantity}x)
                         </div>
                         <div className="text-[10px] text-slate-500">
@@ -228,7 +236,7 @@ export default function SupplierOrdersPage() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-semibold text-slate-900">
+                        <div className="font-bold text-slate-900">
                           {bestQuote?.supplierName || "Nagoya OEM Genuine Hub"}
                         </div>
                         <div className="text-[10px] text-slate-500">
@@ -242,10 +250,10 @@ export default function SupplierOrdersPage() {
                         <span
                           className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${
                             req.status === "PAYMENT_CONFIRMED"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               : req.status === "ORDERED_FROM_SUPPLIER"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-purple-100 text-purple-800"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-purple-50 text-purple-700 border border-purple-200"
                           }`}
                         >
                           {req.status.replace(/_/g, " ")}
@@ -256,7 +264,7 @@ export default function SupplierOrdersPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenPoModal(req)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-2xs transition"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] text-white font-bold text-xs shadow-xs transition"
                           >
                             <CheckSquare className="w-3.5 h-3.5" />
                             <span>Issue PO</span>
@@ -267,16 +275,16 @@ export default function SupplierOrdersPage() {
                           <button
                             type="button"
                             onClick={() => handleMarkDispatched(req.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition"
                           >
-                            <Truck className="w-3.5 h-3.5" />
+                            <Truck className="w-3.5 h-3.5 text-blue-400" />
                             <span>Mark Dispatched</span>
                           </button>
                         )}
 
                         {req.status === "SUPPLIER_DISPATCHED" && (
                           <span className="text-[11px] text-purple-700 font-bold flex items-center justify-end gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
                             <span>In Logistics Care</span>
                           </span>
                         )}
@@ -295,10 +303,12 @@ export default function SupplierOrdersPage() {
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-100 space-y-5 animate-scaleIn">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <CheckSquare className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#ed2025]/10 text-[#ed2025] flex items-center justify-center">
+                  <CheckSquare className="w-5 h-5" />
+                </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">
+                  <h3 className="font-black text-slate-900 text-base">
                     Place Supplier Purchase Order
                   </h3>
                   <p className="text-xs font-mono text-slate-500">
@@ -309,7 +319,7 @@ export default function SupplierOrdersPage() {
               <button
                 type="button"
                 onClick={() => setShowPoModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700"
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -325,7 +335,7 @@ export default function SupplierOrdersPage() {
                   required
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 focus:outline-none focus:border-[#ed2025] focus:bg-white transition"
                 />
               </div>
 
@@ -338,7 +348,7 @@ export default function SupplierOrdersPage() {
                   required
                   value={supplierTracking}
                   onChange={(e) => setSupplierTracking(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 font-mono text-slate-900 focus:outline-none focus:border-[#ed2025] focus:bg-white transition"
                 />
               </div>
 
@@ -351,7 +361,7 @@ export default function SupplierOrdersPage() {
                   required
                   value={estimatedDispatchDate}
                   onChange={(e) => setEstimatedDispatchDate(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:border-[#ed2025] focus:bg-white transition"
                 />
               </div>
 
@@ -363,7 +373,7 @@ export default function SupplierOrdersPage() {
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#ed2025] focus:bg-white transition"
                 />
               </div>
 
@@ -377,7 +387,7 @@ export default function SupplierOrdersPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-md transition"
+                  className="px-5 py-2.5 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] text-white font-bold shadow-md transition"
                 >
                   Confirm PO Placement
                 </button>

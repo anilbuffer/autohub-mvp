@@ -20,6 +20,7 @@ import {
   LucideIcon,
   Layers,
   Sparkles,
+  Box,
 } from "lucide-react";
 import {
   getStoredRequests,
@@ -103,7 +104,7 @@ export default function ProcurementPortalLayout({
           href: "/procurement/queue",
           icon: Compass,
           badge: sourcingQueueCount > 0 ? sourcingQueueCount : undefined,
-          badgeColor: "bg-amber-500",
+          badgeColor: "bg-[#ed2025]",
         },
         {
           label: "Supplier Purchase Orders",
@@ -131,12 +132,12 @@ export default function ProcurementPortalLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-amber-500 selection:text-white">
-      {/* ================= LEFT SIDEBAR (DARK NAVY / AMBER ACCENT) ================= */}
+    <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-[#ed2025] selection:text-white">
+      {/* ================= LEFT SIDEBAR (DARK NAVY / RED ACCENT) ================= */}
       <aside
         className={`${
-          sidebarCollapsed ? "w-20" : "w-72"
-        } bg-[#09101d] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
+          sidebarCollapsed ? "w-20" : "w-64"
+        } bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Top Brand Header */}
@@ -145,16 +146,16 @@ export default function ProcurementPortalLayout({
               href="/procurement"
               className="flex items-center gap-2.5 overflow-hidden"
             >
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center flex-shrink-0">
-                <Compass className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-[#ed2025] text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-950/40">
+                <Box className="w-5 h-5 stroke-[2.5]" />
               </div>
               {!sidebarCollapsed && (
                 <div>
-                  <div className="text-sm font-black tracking-tight text-white flex items-center gap-1">
+                  <div className="text-base font-black tracking-tight text-white flex items-center gap-1">
                     <span>PROCUR</span>
-                    <span className="text-amber-400">ly</span>
+                    <span className="text-[#ed2025]">ly</span>
                   </div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-amber-400/90">
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#ed2025]">
                     PROCUREMENT DESK
                   </div>
                 </div>
@@ -175,7 +176,7 @@ export default function ProcurementPortalLayout({
           <div className="p-3 sm:p-4">
             <Link
               href="/procurement/queue"
-              className={`w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 font-bold text-xs shadow-lg shadow-amber-950/40 transition flex items-center justify-center gap-2 ${
+              className={`w-full py-2.5 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 ${
                 sidebarCollapsed ? "px-2" : "px-4"
               }`}
             >
@@ -206,14 +207,14 @@ export default function ProcurementPortalLayout({
                           sidebarCollapsed ? "justify-center" : ""
                         } ${
                           isActive
-                            ? "bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-amber-400 pl-2.5"
+                            ? "bg-slate-800/90 text-white font-bold shadow-xs border-l-4 border-[#ed2025] pl-2.5"
                             : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
                           <Icon
                             className={`w-4 h-4 transition flex-shrink-0 ${
-                              isActive ? "text-amber-400" : "text-slate-400"
+                              isActive ? "text-[#ed2025]" : "text-slate-400"
                             }`}
                           />
                           {!sidebarCollapsed && (
@@ -223,7 +224,7 @@ export default function ProcurementPortalLayout({
 
                         {!sidebarCollapsed && nav.badge !== undefined && (
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full text-white ${
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white ${
                               nav.badgeColor || "bg-slate-700"
                             }`}
                           >
@@ -246,7 +247,7 @@ export default function ProcurementPortalLayout({
             className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-slate-800/60 transition group"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs ring-1 ring-amber-500/30 flex-shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-[#ed2025]/20 text-[#ed2025] flex items-center justify-center font-bold text-xs ring-1 ring-[#ed2025]/30 flex-shrink-0">
                 NC
               </div>
               {!sidebarCollapsed && (
@@ -254,8 +255,8 @@ export default function ProcurementPortalLayout({
                   <div className="text-xs font-bold text-white truncate">
                     Nathan Cole
                   </div>
-                  <div className="text-[10px] text-amber-400 truncate">
-                    Nagoya/Tokyo Desk
+                  <div className="text-[10px] text-slate-400 truncate">
+                    Nagoya / Tokyo Desk
                   </div>
                 </div>
               )}
@@ -276,7 +277,7 @@ export default function ProcurementPortalLayout({
                 <div className="text-[11px] text-slate-400">
                   nathan.cole@autohub.co.nz
                 </div>
-                <span className="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#ed2025]/10 text-[#ed2025] border border-[#ed2025]/20">
                   SOURCING SPECIALIST
                 </span>
               </div>
@@ -286,7 +287,7 @@ export default function ProcurementPortalLayout({
                   setUserMenuOpen(false);
                   router.push("/login");
                 }}
-                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition mt-1"
+                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition mt-1 font-semibold"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
@@ -299,7 +300,7 @@ export default function ProcurementPortalLayout({
       {/* ================= RIGHT MAIN LAYOUT ================= */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 bg-white border-b border-slate-200/90 min-h-[64px] py-2.5 px-4 sm:px-8 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 min-h-[64px] py-2.5 px-4 sm:px-8 flex items-center justify-between gap-4">
           {/* Breadcrumb & Title */}
           <div className="flex flex-col justify-center min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-0.5 leading-none">
@@ -317,11 +318,11 @@ export default function ProcurementPortalLayout({
                 Procurement
               </Link>
               <span className="text-slate-400">/</span>
-              <span className="text-amber-600 font-semibold truncate">
+              <span className="text-[#ed2025] font-bold truncate">
                 {getPageTitle()}
               </span>
             </div>
-            <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-tight truncate">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight truncate">
               {getPageTitle()}
             </h1>
           </div>
@@ -332,7 +333,7 @@ export default function ProcurementPortalLayout({
             <button
               type="button"
               onClick={() => setSearchModalOpen(true)}
-              className="flex items-center justify-between w-52 sm:w-64 lg:w-72 px-3.5 py-2 rounded-xl bg-slate-50/80 hover:bg-slate-100/90 border border-slate-200 text-left transition group shadow-2xs"
+              className="flex items-center justify-between w-52 sm:w-64 lg:w-72 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition group shadow-2xs"
             >
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
@@ -350,7 +351,7 @@ export default function ProcurementPortalLayout({
 
             <Link
               href="/procurement/queue"
-              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
+              className="px-3.5 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span className="hidden sm:inline">Add Quote</span>
