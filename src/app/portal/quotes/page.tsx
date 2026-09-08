@@ -25,13 +25,13 @@ import {
   rejectCustomerQuote,
   subscribeToStore,
 } from "@/lib/store";
-import { PartRequest, FreightOption } from "@/lib/types";
+import { PartRequest, FreightOption, FreightMethod } from "@/lib/types";
 
 export default function CustomerQuotesPage() {
   const [requests, setRequests] = useState<PartRequest[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "ACTION_REQUIRED" | "ACCEPTED" | "EXPIRED">("ALL");
-  const [selectedFreightMethod, setSelectedFreightMethod] = useState<{ [reqId: string]: "AIR" | "SEA" }>({});
+  const [selectedFreightMethod, setSelectedFreightMethod] = useState<{ [reqId: string]: FreightMethod }>({});
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const refresh = () => {
@@ -50,7 +50,7 @@ export default function CustomerQuotesPage() {
 
   const filtered = quoteRequests.filter((r) => {
     if (filter === "ACTION_REQUIRED" && r.status !== "AWAITING_CUSTOMER_APPROVAL" && r.status !== "QUOTE_PREPARED") return false;
-    if (filter === "ACCEPTED" && r.status !== "QUOTE_ACCEPTED" && r.status !== "PAYMENT_CONFIRMED" && r.status !== "AWAITING_PAYMENT") return false;
+    if (filter === "ACCEPTED" && r.status !== "PAYMENT_CONFIRMED" && r.status !== "AWAITING_PAYMENT" && r.quote?.status !== "ACCEPTED") return false;
     if (filter === "EXPIRED" && r.status !== "CANCELLED") return false;
 
     if (search.trim()) {
@@ -67,18 +67,14 @@ export default function CustomerQuotesPage() {
 
   const handleAccept = (req: PartRequest) => {
     if (!req.quote) return;
-    const method = selectedFreightMethod[req.id] || "AIR";
-    const chosenFreight =
-      req.quote.freightOptions.find((f) => f.method === method) ||
-      req.quote.freightOptions[0];
-
-    acceptCustomerQuote(req.id, chosenFreight);
+    const method: FreightMethod = selectedFreightMethod[req.id] || "AIR_EXPRESS";
+    acceptCustomerQuote(req.id, method, req.customerName);
     setActionSuccess(`Quote for ${req.referenceNumber} has been accepted. Payment request generated.`);
     setTimeout(() => setActionSuccess(null), 4000);
   };
 
   const handleReject = (req: PartRequest) => {
-    rejectCustomerQuote(req.id, "Customer requested cancellation from portal");
+    rejectCustomerQuote(req.id, "Customer requested cancellation from portal", req.customerName);
     setActionSuccess(`Quote for ${req.referenceNumber} has been declined.`);
     setTimeout(() => setActionSuccess(null), 4000);
   };
@@ -163,10 +159,21 @@ export default function CustomerQuotesPage() {
         ) : (
           filtered.map((req) => {
             const q = req.quote!;
-            const airOption = q.freightOptions.find((f) => f.method === "AIR");
-            const seaOption = q.freightOptions.find((f) => f.method === "SEA");
-            const activeFreight = selectedFreightMethod[req.id] || "AIR";
-            const currentFreight = activeFreight === "AIR" ? airOption : (seaOption || airOption);
+            const airOption = q.freightOptions.find((f) => f.method === "AIR_EXPRESS" || f.method === "AIR");
+            const seaOption = q.freightOptions.find((f) => f.method === "SEA_FREIGHT" || f.method === "SEA");
+            const activeFreight: FreightMethod = selectedFreightMethod[req.id] || "AIR_EXPRESS";
+            const currentFreight = (activeFreight === "AIR_EXPRESS" || activeFreight === "AIR") ? airOption : (seaOption || airOption);
+
+            const calcTotal = (opt?: FreightOption) => {
+              if (!opt) return q.totalNzd;
+              if (opt.totalNzd) return opt.totalNzd;
+              const subtotal = q.basePartCostNzd + q.marginAmountNzd + q.procurementFeeNzd + (opt.costNzd ?? opt.freightCostNzd ?? 0);
+              return subtotal * 1.15;
+            };
+
+            const airTotal = calcTotal(airOption);
+            const seaTotal = calcTotal(seaOption);
+            const currentTotal = calcTotal(currentFreight);
 
             const isActionable = req.status === "AWAITING_CUSTOMER_APPROVAL" || req.status === "QUOTE_PREPARED";
 
@@ -209,7 +216,7 @@ export default function CustomerQuotesPage() {
                       Total Landed (inc. GST)
                     </span>
                     <div className="text-2xl font-black text-slate-900 font-mono">
-                      ${currentFreight ? currentFreight.totalNzd.toFixed(2) : q.totalNzd.toFixed(2)}
+                      ${currentTotal.toFixed(2)}
                       <span className="text-xs font-normal text-slate-400 font-sans ml-1">NZD</span>
                     </div>
                   </div>
@@ -224,17 +231,17 @@ export default function CustomerQuotesPage() {
                     {airOption && (
                       <div
                         onClick={() =>
-                          setSelectedFreightMethod({ ...selectedFreightMethod, [req.id]: "AIR" })
+                          setSelectedFreightMethod({ ...selectedFreightMethod, [req.id]: "AIR_EXPRESS" })
                         }
                         className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${
-                          activeFreight === "AIR"
+                          (activeFreight === "AIR_EXPRESS" || activeFreight === "AIR")
                             ? "border-[#ed2025] bg-red-50/20"
                             : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                            activeFreight === "AIR" ? "bg-red-50 text-[#ed2025]" : "bg-slate-100 text-slate-500"
+                            (activeFreight === "AIR_EXPRESS" || activeFreight === "AIR") ? "bg-red-50 text-[#ed2025]" : "bg-slate-100 text-slate-500"
                           }`}>
                             <Plane className="w-5 h-5" />
                           </div>
@@ -242,18 +249,18 @@ export default function CustomerQuotesPage() {
                             <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
                               <span>Air Express Priority</span>
                               <span className="text-[10px] font-medium text-slate-500">
-                                ({airOption.estimatedDays})
+                                ({airOption.estimatedTransitDays || airOption.estimatedDays || "3-5 business days"})
                               </span>
                             </div>
                             <span className="text-[11px] text-slate-500">
-                              Freight: ${airOption.freightCostNzd} NZD
+                              Freight: ${airOption.costNzd ?? airOption.freightCostNzd ?? 0} NZD
                             </span>
                           </div>
                         </div>
 
                         <div className="text-right">
                           <div className="text-sm font-bold font-mono text-slate-900">
-                            ${airOption.totalNzd.toFixed(2)}
+                            ${airTotal.toFixed(2)}
                           </div>
                           <span className="text-[10px] text-slate-400">Total Landed</span>
                         </div>
@@ -263,17 +270,17 @@ export default function CustomerQuotesPage() {
                     {seaOption && (
                       <div
                         onClick={() =>
-                          setSelectedFreightMethod({ ...selectedFreightMethod, [req.id]: "SEA" })
+                          setSelectedFreightMethod({ ...selectedFreightMethod, [req.id]: "SEA_FREIGHT" })
                         }
                         className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${
-                          activeFreight === "SEA"
+                          (activeFreight === "SEA_FREIGHT" || activeFreight === "SEA")
                             ? "border-[#ed2025] bg-red-50/20"
                             : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                            activeFreight === "SEA" ? "bg-red-50 text-[#ed2025]" : "bg-slate-100 text-slate-500"
+                            (activeFreight === "SEA_FREIGHT" || activeFreight === "SEA") ? "bg-red-50 text-[#ed2025]" : "bg-slate-100 text-slate-500"
                           }`}>
                             <Anchor className="w-5 h-5" />
                           </div>
@@ -281,18 +288,18 @@ export default function CustomerQuotesPage() {
                             <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
                               <span>Ocean Sea Freight</span>
                               <span className="text-[10px] font-medium text-slate-500">
-                                ({seaOption.estimatedDays})
+                                ({seaOption.estimatedTransitDays || seaOption.estimatedDays || "18-24 business days"})
                               </span>
                             </div>
                             <span className="text-[11px] text-slate-500">
-                              Freight: ${seaOption.freightCostNzd} NZD
+                              Freight: ${seaOption.costNzd ?? seaOption.freightCostNzd ?? 0} NZD
                             </span>
                           </div>
                         </div>
 
                         <div className="text-right">
                           <div className="text-sm font-bold font-mono text-slate-900">
-                            ${seaOption.totalNzd.toFixed(2)}
+                            ${seaTotal.toFixed(2)}
                           </div>
                           <span className="text-[10px] text-slate-400">Total Landed</span>
                         </div>
@@ -306,7 +313,7 @@ export default function CustomerQuotesPage() {
                   <div className="flex items-center gap-4 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      Valid through {q.validUntil}
+                      Valid through {q.validUntil || (q.expiresAt ? new Date(q.expiresAt).toLocaleDateString("en-NZ") : "14 Days")}
                     </span>
                     <Link
                       href={`/portal/messages?req=${req.id}`}

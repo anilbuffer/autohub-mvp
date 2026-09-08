@@ -217,19 +217,6 @@ export default function CustomerPortalLayout({
             </button>
           </div>
 
-          {/* Primary Action: + NEW PARTS REQUEST */}
-          <div className="p-3 sm:p-4">
-            <Link
-              id="sidebar-new-request-button"
-              href="/portal/new-request"
-              className={`w-full py-3 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 ${sidebarCollapsed ? "px-2" : "px-4"
-                }`}
-            >
-              <Plus className="w-4 h-4 flex-shrink-0 stroke-[2.5]" />
-              {!sidebarCollapsed && <span>NEW PARTS REQUEST</span>}
-            </Link>
-          </div>
-
           {/* Navigation Items by Group */}
           <div className="px-3 py-2 space-y-6 flex-1">
             {navGroups.map((grp) => (
@@ -432,15 +419,6 @@ export default function CustomerPortalLayout({
             {/* Portal Switcher */}
             <PortalNavSwitcher currentPortal="customer" variant="light" />
 
-            {/* Primary CTA: + New Request */}
-            <Link
-              id="header-new-request-button"
-              href="/portal/new-request"
-              className="px-3.5 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden sm:inline">New Request</span>
-            </Link>
 
             {/* Help Question Icon */}
             <button

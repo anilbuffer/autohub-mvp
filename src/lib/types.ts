@@ -32,7 +32,7 @@ export type UserRole =
   | "FINANCE_OFFICER"
   | "SYSTEM_ADMIN";
 
-export type FreightMethod = "AIR_EXPRESS" | "SEA_FREIGHT";
+export type FreightMethod = "AIR_EXPRESS" | "SEA_FREIGHT" | "AIR" | "SEA";
 
 export type ShipmentCarrier =
   | "MAINFREIGHT"
@@ -56,6 +56,9 @@ export interface SupplierProfile {
   contactPerson?: string;
   contactEmail?: string;
   contactPhone?: string;
+  city?: string;
+  completedOrders?: number;
+  specialties?: string[];
 }
 
 export interface VehicleInfo {
@@ -74,9 +77,11 @@ export interface VehicleInfo {
 export interface PartRequirement {
   partName: string;
   oemPartNumber?: string;
+  oemNumber?: string;
   quantity: number;
   genuinePreference: "GENUINE_ONLY" | "AFTERMARKET_ACCEPTABLE" | "ANY";
   conditionRequirement: PartCondition;
+  conditionPreference?: string;
   category: string;
   weightEstKg?: number;
   descriptionNotes?: string;
@@ -93,17 +98,22 @@ export interface SupplierQuotation {
   supplierId: string;
   supplierName: string;
   supplierCountry: string; // e.g., Japan, Germany, USA, Australia
+  country?: string;
   quantity?: number; // Quoted quantity
   unitCostForeign?: number; // Foreign cost per unit
   unitCostNzd?: number; // NZD cost per unit
   partCostCurrency: string; // JPY, USD, EUR, AUD
+  currency?: string;
   partCostForeign: number;
   exchangeRateToNzd: number;
   partCostNzd: number;
   domesticFreightForeign: number;
   domesticFreightNzd: number;
+  totalLandedCostNzd?: number;
   availabilityDays: number;
   notes?: string;
+  createdAt?: string;
+  status?: string;
 }
 
 export interface FreightOption {
@@ -116,6 +126,13 @@ export interface FreightOption {
   manualOverride?: boolean;
   manualOverrideReason?: string;
   disabledReason?: string;
+  estimatedDays?: string;
+  freightCostNzd?: number;
+  costForeign?: number;
+  currency?: string;
+  subtotalNzd?: number;
+  gstNzd?: number;
+  totalNzd?: number;
 }
 
 export interface CustomerQuote {
@@ -139,6 +156,11 @@ export interface CustomerQuote {
   customerFeedback?: string;
   revisionNumber?: number;
   revisionNotes?: string;
+  validUntil?: string;
+  partPriceCustomerNzd?: number;
+  marginPercent?: number;
+  gstRate?: number;
+  requestId?: string;
 }
 
 export interface LogisticsMilestone {

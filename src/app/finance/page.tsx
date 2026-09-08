@@ -123,32 +123,27 @@ export default function FinanceDashboard() {
         </div>
 
         {/* Card 2: Pending Remittances */}
-        <div className={`rounded-2xl p-5 border-2 shadow-sm flex items-start justify-between relative overflow-hidden ${
-          pendingPayments.length > 0 ? "bg-amber-50/40 border-amber-300" : "bg-white border-slate-200/80"
-        }`}>
+        <div className={`rounded-2xl p-5 border-2 shadow-sm flex items-start justify-between relative overflow-hidden ${pendingPayments.length > 0 ? "bg-amber-50/40 border-amber-300" : "bg-white border-slate-200/80"
+          }`}>
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className={`text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block ${
-                pendingPayments.length > 0 ? "text-amber-900" : "text-slate-500"
-              }`}>
+              <span className={`text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block ${pendingPayments.length > 0 ? "text-amber-900" : "text-slate-500"
+                }`}>
                 PENDING PAYMENTS
               </span>
               {pendingPayments.length > 0 && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />}
             </div>
-            <div className={`text-2xl sm:text-3xl font-black ${
-              pendingPayments.length > 0 ? "text-amber-950" : "text-slate-900"
-            }`}>
+            <div className={`text-2xl sm:text-3xl font-black ${pendingPayments.length > 0 ? "text-amber-950" : "text-slate-900"
+              }`}>
               ${pendingAmount.toLocaleString("en-NZ", { maximumFractionDigits: 0 })}
             </div>
-            <span className={`text-[11px] font-semibold block ${
-              pendingPayments.length > 0 ? "text-amber-700" : "text-slate-400"
-            }`}>
+            <span className={`text-[11px] font-semibold block ${pendingPayments.length > 0 ? "text-amber-700" : "text-slate-400"
+              }`}>
               {pendingPayments.length} invoices awaiting payment
             </span>
           </div>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            pendingPayments.length > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
-          }`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${pendingPayments.length > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+            }`}>
             <Clock className="w-5 h-5" />
           </div>
         </div>
@@ -310,11 +305,10 @@ export default function FinanceDashboard() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-slate-900">{acc.name}</span>
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                          acc.status === "Good Standing"
+                        className={`text-[10px] px-2 py-0.5 rounded font-bold ${acc.status === "Good Standing"
                             ? "bg-emerald-100 text-emerald-800"
                             : "bg-amber-100 text-amber-800"
-                        }`}
+                          }`}
                       >
                         {acc.status}
                       </span>
@@ -330,9 +324,8 @@ export default function FinanceDashboard() {
 
                     <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${
-                          percent > 80 ? "bg-amber-500" : "bg-[#ed2025]"
-                        }`}
+                        className={`h-full rounded-full ${percent > 80 ? "bg-amber-500" : "bg-[#ed2025]"
+                          }`}
                         style={{ width: `${percent}%` }}
                       />
                     </div>

@@ -101,8 +101,8 @@ export default function CustomerDashboardPage() {
     const val = r.quote?.totalNzd
       ? `$${r.quote.totalNzd.toFixed(2)}`
       : r.invoice?.totalNzd
-      ? `$${r.invoice.totalNzd.toFixed(2)}`
-      : "$485.00";
+        ? `$${r.invoice.totalNzd.toFixed(2)}`
+        : "$485.00";
 
     return {
       ref: r.referenceNumber,
@@ -123,15 +123,15 @@ export default function CustomerDashboardPage() {
     const val = r.quote?.totalNzd
       ? `$${r.quote.totalNzd.toFixed(2)}`
       : r.invoice?.totalNzd
-      ? `$${r.invoice.totalNzd.toFixed(2)}`
-      : "$485.00";
+        ? `$${r.invoice.totalNzd.toFixed(2)}`
+        : "$485.00";
 
     const dateStr = r.updatedDate || r.submittedDate
       ? new Date(r.updatedDate || r.submittedDate).toLocaleDateString("en-NZ", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "Live";
 
     return {
@@ -199,32 +199,27 @@ export default function CustomerDashboardPage() {
         </div>
 
         {/* Card 2: Awaiting Your Action */}
-        <div className={`rounded-2xl p-5 border-2 shadow-sm flex items-start justify-between relative overflow-hidden ${
-          awaitingActionCount > 0 ? "bg-amber-50/40 border-amber-300" : "bg-white border-slate-200/80"
-        }`}>
+        <div className={`rounded-2xl p-5 border-2 shadow-sm flex items-start justify-between relative overflow-hidden ${awaitingActionCount > 0 ? "bg-amber-50/40 border-amber-300" : "bg-white border-slate-200/80"
+          }`}>
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className={`text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block ${
-                awaitingActionCount > 0 ? "text-amber-900" : "text-slate-500"
-              }`}>
+              <span className={`text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block ${awaitingActionCount > 0 ? "text-amber-900" : "text-slate-500"
+                }`}>
                 AWAITING YOUR ACTION
               </span>
               {awaitingActionCount > 0 && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />}
             </div>
-            <div className={`text-2xl sm:text-3xl font-black ${
-              awaitingActionCount > 0 ? "text-amber-950" : "text-slate-900"
-            }`}>
+            <div className={`text-2xl sm:text-3xl font-black ${awaitingActionCount > 0 ? "text-amber-950" : "text-slate-900"
+              }`}>
               {awaitingActionCount.toString().padStart(2, "0")}
             </div>
-            <span className={`text-[11px] font-semibold block ${
-              awaitingActionCount > 0 ? "text-amber-700" : "text-slate-400"
-            }`}>
+            <span className={`text-[11px] font-semibold block ${awaitingActionCount > 0 ? "text-amber-700" : "text-slate-400"
+              }`}>
               {awaitingActionCount > 0 ? "Requires attention" : "All cleared"}
             </span>
           </div>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            awaitingActionCount > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
-          }`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${awaitingActionCount > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+            }`}>
             <Clock className="w-5 h-5" />
           </div>
         </div>
@@ -297,16 +292,14 @@ export default function CustomerDashboardPage() {
                     {item.vehicle}
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      item.statusType === "amber"
-                        ? "bg-amber-100 text-amber-800 border-amber-300"
-                        : "bg-red-100 text-[#ed2025] border-red-300"
-                    }`}
+                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${item.statusType === "amber"
+                      ? "bg-amber-100 text-amber-800 border-amber-300"
+                      : "bg-red-100 text-[#ed2025] border-red-300"
+                      }`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        item.statusType === "amber" ? "bg-amber-500" : "bg-[#ed2025]"
-                      }`}
+                      className={`w-1.5 h-1.5 rounded-full ${item.statusType === "amber" ? "bg-amber-500" : "bg-[#ed2025]"
+                        }`}
                     />
                     <span>{item.status}</span>
                   </span>

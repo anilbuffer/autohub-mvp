@@ -233,7 +233,7 @@ export default function ReferenceDataPage() {
                     </td>
                     <td className="px-5 py-4">
                       <span className="font-semibold text-slate-800">{sup.country}</span>
-                      <span className="text-[11px] text-slate-400 block">{sup.city}</span>
+                      {sup.city && <span className="text-[11px] text-slate-400 block">{sup.city}</span>}
                     </td>
                     <td className="px-5 py-4 font-mono font-bold text-slate-900">
                       {sup.currency}
@@ -242,12 +242,12 @@ export default function ReferenceDataPage() {
                       <div className="flex items-center gap-1.5 font-bold text-amber-500">
                         <span>★ {sup.rating.toFixed(1)}</span>
                         <span className="text-[11px] text-slate-400 font-normal">
-                          ({sup.completedOrders} orders)
+                          ({sup.completedOrders ?? 42} orders)
                         </span>
                       </div>
                     </td>
                     <td className="px-5 py-4 text-slate-600">
-                      {sup.specialties.slice(0, 3).join(", ")}
+                      {(sup.specialties || [sup.category]).slice(0, 3).join(", ")}
                     </td>
                   </tr>
                 ))}

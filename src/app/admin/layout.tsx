@@ -266,9 +266,8 @@ export default function AdministratorLayout({
     <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-[#ed2025] selection:text-white">
       {/* ================= LEFT SIDEBAR (DARK NAVY) ================= */}
       <aside
-        className={`bg-[#0f172a] text-slate-300 flex flex-col justify-between border-r border-slate-800/80 transition-all duration-300 z-30 sticky top-0 h-screen ${
-          sidebarCollapsed ? "w-20" : "w-64"
-        }`}
+        className={`bg-[#0f172a] text-slate-300 flex flex-col justify-between border-r border-slate-800/80 transition-all duration-300 z-30 sticky top-0 h-screen ${sidebarCollapsed ? "w-20" : "w-64"
+          }`}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Top Brand Header */}
@@ -312,20 +311,6 @@ export default function AdministratorLayout({
             </button>
           </div>
 
-          {/* Quick Action Button */}
-          <div className="p-3 sm:p-4">
-            <Link
-              id="sidebar-primary-action-button"
-              href="/admin/requests"
-              className={`w-full py-2.5 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 ${
-                sidebarCollapsed ? "px-2" : "px-4"
-              }`}
-            >
-              <Plus className="w-4 h-4 flex-shrink-0 stroke-[2.5]" />
-              {!sidebarCollapsed && <span>MANAGE REQUESTS</span>}
-            </Link>
-          </div>
-
           {/* Navigation Items by Group */}
           <div className="px-3 py-2 space-y-5 flex-1">
             {navGroups.map((grp) => (
@@ -344,28 +329,24 @@ export default function AdministratorLayout({
                       <Link
                         key={nav.label}
                         href={nav.href}
-                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                          sidebarCollapsed ? "justify-center" : ""
-                        } ${
-                          isActive
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${sidebarCollapsed ? "justify-center" : ""
+                          } ${isActive
                             ? "bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-[#ed2025] pl-2.5"
                             : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2.5">
                           <Icon
-                            className={`w-4 h-4 transition flex-shrink-0 ${
-                              isActive ? "text-[#ed2025]" : "text-slate-400"
-                            }`}
+                            className={`w-4 h-4 transition flex-shrink-0 ${isActive ? "text-[#ed2025]" : "text-slate-400"
+                              }`}
                           />
                           {!sidebarCollapsed && <span className="truncate">{nav.label}</span>}
                         </div>
 
                         {!sidebarCollapsed && nav.badge !== undefined && (
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full text-white ${
-                              nav.badgeColor || "bg-slate-700"
-                            }`}
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full text-white ${nav.badgeColor || "bg-slate-700"
+                              }`}
                           >
                             {nav.badge}
                           </span>
@@ -509,78 +490,6 @@ export default function AdministratorLayout({
               </kbd>
             </button>
 
-            {/* Quick Action Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setActionDropdownOpen(!actionDropdownOpen)}
-                className="px-3.5 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
-              >
-                <Plus className="w-4 h-4 stroke-[2.5]" />
-                <span>Quick Actions</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    actionDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {actionDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl p-1.5 z-50 animate-scaleIn text-xs">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">
-                    Administration Tasks
-                  </div>
-                  <Link
-                    href="/admin/requests"
-                    onClick={() => setActionDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700 font-medium transition"
-                  >
-                    <FileText className="w-4 h-4 text-red-600" />
-                    <span>Manage Parts Requests</span>
-                  </Link>
-                  <Link
-                    href="/admin/supplier-quotes"
-                    onClick={() => setActionDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700 font-medium transition"
-                  >
-                    <Layers className="w-4 h-4 text-blue-600" />
-                    <span>Capture Supplier Quotes</span>
-                  </Link>
-                  <Link
-                    href="/admin/customer-quotes"
-                    onClick={() => setActionDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700 font-medium transition"
-                  >
-                    <BadgePercent className="w-4 h-4 text-amber-600" />
-                    <span>Issue Customer Quote</span>
-                  </Link>
-                  <Link
-                    href="/admin/procurement"
-                    onClick={() => setActionDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700 font-medium transition"
-                  >
-                    <PackageCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Generate Supplier PO</span>
-                  </Link>
-                  <Link
-                    href="/admin/payments"
-                    onClick={() => setActionDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700 font-medium transition"
-                  >
-                    <Banknote className="w-4 h-4 text-purple-600" />
-                    <span>Record Payment Remittance</span>
-                  </Link>
-                  <Link
-                    href="/admin/shipments"
-                    onClick={() => setActionDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700 font-medium transition"
-                  >
-                    <Compass className="w-4 h-4 text-cyan-600" />
-                    <span>Update Shipment Status</span>
-                  </Link>
-                </div>
-              )}
-            </div>
 
             {/* Portal Switcher */}
             <PortalNavSwitcher currentPortal="admin" variant="light" />

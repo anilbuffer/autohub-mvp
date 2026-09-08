@@ -60,12 +60,13 @@ export default function ProcurementQuoteBuilderPage() {
 
   const selectedRequest = requests.find((r) => r.id === selectedReqId);
   const quotes = selectedRequest?.supplierQuotes || [];
+  const getLandedCost = (sq: any) => sq.totalLandedCostNzd ?? ((sq.partCostNzd || 0) + (sq.domesticFreightNzd || 0));
   const bestSupplierQuote = quotes.length > 0
-    ? [...quotes].sort((a, b) => a.totalLandedCostNzd - b.totalLandedCostNzd)[0]
+    ? [...quotes].sort((a, b) => getLandedCost(a) - getLandedCost(b))[0]
     : null;
 
   // Calculation parameters
-  const baseCostNzd = bestSupplierQuote ? bestSupplierQuote.totalLandedCostNzd : 500;
+  const baseCostNzd = bestSupplierQuote ? getLandedCost(bestSupplierQuote) : 500;
   const marginMultiplier = 1 + marginPercent / 100;
   const partPriceCustomerNzd = Math.round(baseCostNzd * marginMultiplier);
 
@@ -85,42 +86,59 @@ export default function ProcurementQuoteBuilderPage() {
 
     const freightOpts: FreightOption[] = [
       {
-        method: "AIR",
-        costForeign: 0,
-        currency: "NZD",
+        method: "AIR_EXPRESS",
+        carrierName: "Air New Zealand Cargo / Cathay Priority",
+        estimatedTransitDays: "3 - 5 business days",
+        costNzd: airFreightNzd,
         freightCostNzd: airFreightNzd,
         estimatedDays: "3-5 Business Days",
         subtotalNzd: airSubtotal,
         gstNzd: airGst,
         totalNzd: airTotal,
+        available: true,
       },
       {
-        method: "SEA",
-        costForeign: 0,
-        currency: "NZD",
+        method: "SEA_FREIGHT",
+        carrierName: "Toyofuji / Ocean Network Express (Consolidated)",
+        estimatedTransitDays: "18 - 24 business days",
+        costNzd: seaFreightNzd,
         freightCostNzd: seaFreightNzd,
         estimatedDays: "18-24 Business Days",
         subtotalNzd: seaSubtotal,
         gstNzd: seaGst,
         totalNzd: seaTotal,
+        available: true,
       },
     ];
 
+    const now = new Date();
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + validDays);
+    const quoteNum = `QTE-2026-${Math.floor(10000 + Math.random() * 90000)}`;
 
     const quotePayload: CustomerQuote = {
       id: `QUO-${Date.now().toString().slice(-6)}`,
+      quoteNumber: quoteNum,
+      createdAt: now.toISOString(),
+      expiresAt: expiryDate.toISOString(),
       requestId: selectedRequest.id,
-      selectedSupplierQuoteId: bestSupplierQuote?.id,
+      selectedSupplierQuoteId: bestSupplierQuote?.id || "SQ-DEFAULT",
+      basePartCostNzd: baseCostNzd,
+      targetMarginPercentage: marginPercent,
+      marginAmountNzd: Math.round(baseCostNzd * (marginPercent / 100)),
+      procurementFeeNzd: 75,
+      landedCostNzd: baseCostNzd,
+      freightOptions: freightOpts,
+      selectedFreightMethod: "AIR_EXPRESS",
+      subtotalNzd: airSubtotal + 75,
+      gstAmountNzd: airGst,
+      totalNzd: airTotal + 75,
+      termsAccepted: false,
+      status: "ISSUED",
       partPriceCustomerNzd: partPriceCustomerNzd,
       marginPercent: marginPercent,
-      freightOptions: freightOpts,
       gstRate: settings.gstRate,
-      totalNzd: airTotal, // baseline default
       validUntil: expiryDate.toISOString().split("T")[0],
-      status: "ISSUED",
-      createdAt: new Date().toISOString(),
     };
 
     issueCustomerQuote(selectedRequest.id, quotePayload);

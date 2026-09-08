@@ -87,17 +87,31 @@ export default function ProcurementSupplierQuotesPage() {
     const supplier = suppliers.find((s) => s.id === supplierId);
     if (!supplier) return;
 
+    const costForeign = Number(partCostForeign);
+    const exRate = Number(exchangeRate);
+    const freightForeign = Number(domesticFreightForeign);
+    const pCostNzd = Number((costForeign * exRate).toFixed(2));
+    const fCostNzd = Number((freightForeign * exRate).toFixed(2));
+    const landedTotal = pCostNzd + fCostNzd;
+
     addSupplierQuote(selectedReqId, {
+      id: `QUO-${Date.now()}`,
       supplierId: supplier.id,
       supplierName: supplier.name,
+      supplierCountry: supplier.country,
       country: supplier.country,
-      partCostForeign: Number(partCostForeign),
+      partCostForeign: costForeign,
+      partCostCurrency: partCostCurrency,
       currency: partCostCurrency,
-      exchangeRateToNzd: Number(exchangeRate),
-      domesticFreightForeign: Number(domesticFreightForeign),
+      exchangeRateToNzd: exRate,
+      partCostNzd: pCostNzd,
+      domesticFreightForeign: freightForeign,
+      domesticFreightNzd: fCostNzd,
+      totalLandedCostNzd: landedTotal,
       availabilityDays: Number(availabilityDays),
       notes: quoteNotes,
       status: "RECEIVED",
+      createdAt: new Date().toISOString(),
     });
 
     setModalOpen(false);
@@ -110,9 +124,12 @@ export default function ProcurementSupplierQuotesPage() {
     setQuoteNotes("");
   };
 
+  const getSupplierLandedCost = (sq: any) =>
+    sq.totalLandedCostNzd ?? ((sq.partCostNzd || 0) + (sq.domesticFreightNzd || 0));
+
   // Find the lowest landed quote for comparison badge
   const lowestLandedQuote = existingQuotes.length > 0
-    ? [...existingQuotes].sort((a, b) => a.totalLandedCostNzd - b.totalLandedCostNzd)[0]
+    ? [...existingQuotes].sort((a, b) => getSupplierLandedCost(a) - getSupplierLandedCost(b))[0]
     : null;
 
   return (
@@ -241,11 +258,11 @@ export default function ProcurementSupplierQuotesPage() {
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl">
                     <span className="text-slate-400 block text-[10px] uppercase font-bold">OEM Part #</span>
-                    <span className="font-bold text-slate-800 font-mono">{selectedRequest.part.oemNumber || "N/A"}</span>
+                    <span className="font-bold text-slate-800 font-mono">{selectedRequest.part.oemPartNumber || selectedRequest.part.oemNumber || "N/A"}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl">
                     <span className="text-slate-400 block text-[10px] uppercase font-bold">Condition</span>
-                    <span className="font-bold text-slate-800">{selectedRequest.part.conditionPreference}</span>
+                    <span className="font-bold text-slate-800">{selectedRequest.part.conditionRequirement || selectedRequest.part.conditionPreference || "Genuine OEM"}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl">
                     <span className="text-slate-400 block text-[10px] uppercase font-bold">Customer</span>
@@ -300,11 +317,11 @@ export default function ProcurementSupplierQuotesPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-xs font-bold text-slate-900">{q.supplierName}</span>
                               <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                                {q.country}
+                                {q.country || q.supplierCountry}
                               </span>
                             </div>
                             <span className="text-[11px] text-slate-400 block">
-                              Recorded: {new Date(q.createdAt).toLocaleDateString("en-NZ")}
+                              Recorded: {q.createdAt ? new Date(q.createdAt).toLocaleDateString("en-NZ") : "Recent"}
                             </span>
                           </div>
 
@@ -313,7 +330,7 @@ export default function ProcurementSupplierQuotesPage() {
                             <div>
                               <span className="text-[10px] text-slate-400 block font-bold uppercase">Foreign Price</span>
                               <div className="font-mono font-bold text-slate-900">
-                                {q.currency} {q.partCostForeign.toLocaleString()}
+                                {q.currency || q.partCostCurrency} {q.partCostForeign.toLocaleString()}
                               </div>
                               <span className="text-[10px] text-slate-400">
                                 Ex: {q.exchangeRateToNzd.toFixed(4)}
@@ -323,7 +340,7 @@ export default function ProcurementSupplierQuotesPage() {
                             <div>
                               <span className="text-[10px] text-slate-400 block font-bold uppercase">Landed NZD</span>
                               <div className="font-mono font-black text-slate-900 text-sm">
-                                ${q.totalLandedCostNzd.toFixed(2)}
+                                ${getSupplierLandedCost(q).toFixed(2)}
                               </div>
                               <span className="text-[10px] text-slate-500">
                                 Avail: {q.availabilityDays} days

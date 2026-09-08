@@ -41,7 +41,7 @@ export default function CompanyProfilePage() {
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserRole, setNewUserRole] = useState<"BUYER" | "FINANCE" | "ORG_ADMIN">("BUYER");
+  const [newUserRole, setNewUserRole] = useState<CustomerOrgUser["role"]>("Parts Specialist");
 
   const refresh = () => {
     const custs = getStoredCustomers();
@@ -91,6 +91,7 @@ export default function CompanyProfilePage() {
       name: newUserName,
       email: newUserEmail,
       role: newUserRole,
+      status: "ACTIVE",
     });
 
     setUserModalOpen(false);
@@ -163,7 +164,7 @@ export default function CompanyProfilePage() {
           <MapPin className="w-4 h-4" />
           <span>Address Book</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-700 text-slate-200 font-mono">
-            {customer.addresses.length}
+            {customer.deliveryAddresses?.length || 0}
           </span>
         </button>
 
@@ -178,7 +179,7 @@ export default function CompanyProfilePage() {
           <Users className="w-4 h-4" />
           <span>User Management</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-700 text-slate-200 font-mono">
-            {customer.users.length}
+            {customer.organizationUsers?.length || 0}
           </span>
         </button>
       </div>
@@ -299,14 +300,14 @@ export default function CompanyProfilePage() {
       {activeSection === "ADDRESSES" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {customer.addresses.map((addr) => (
+            {(customer.deliveryAddresses || []).map((addr) => (
               <div
                 key={addr.id}
                 className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase tracking-wider">
-                    {addr.type}
+                    {addr.label}
                   </span>
                   {addr.isDefault && (
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
@@ -316,19 +317,12 @@ export default function CompanyProfilePage() {
                 </div>
 
                 <div className="text-xs space-y-1">
-                  <div className="font-bold text-slate-900 text-sm">{addr.streetAddress}</div>
+                  <div className="font-bold text-slate-900 text-sm">{addr.street}</div>
                   <div className="text-slate-600">
                     {addr.suburb && `${addr.suburb}, `}{addr.city} {addr.postcode}
                   </div>
-                  <div className="text-slate-500 font-semibold">{addr.country}</div>
+                  <div className="text-slate-500 font-semibold">New Zealand</div>
                 </div>
-
-                {addr.deliveryInstructions && (
-                  <div className="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-600">
-                    <span className="font-bold text-slate-700 block">Dock Instructions:</span>
-                    {addr.deliveryInstructions}
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -369,7 +363,7 @@ export default function CompanyProfilePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {customer.users.map((u) => (
+                {(customer.organizationUsers || []).map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/60 transition">
                     <td className="px-5 py-4 font-bold text-slate-900">
                       {u.name}
@@ -379,7 +373,7 @@ export default function CompanyProfilePage() {
                     </td>
                     <td className="px-5 py-4">
                       <span className="font-bold text-slate-800 text-[11px]">
-                        {u.role === "ORG_ADMIN" ? "Company Admin" : u.role === "FINANCE" ? "Finance / Accounts" : "Parts Buyer"}
+                        {u.role}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -388,7 +382,7 @@ export default function CompanyProfilePage() {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {customer.users.length > 1 && (
+                      {(customer.organizationUsers || []).length > 1 && (
                         <button
                           onClick={() => handleRemoveUser(u.id)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
@@ -448,12 +442,13 @@ export default function CompanyProfilePage() {
                 <label className="font-bold text-slate-800 block mb-1">Portal Permission Level</label>
                 <select
                   value={newUserRole}
-                  onChange={(e) => setNewUserRole(e.target.value as any)}
+                  onChange={(e) => setNewUserRole(e.target.value as CustomerOrgUser["role"])}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 outline-none focus:border-[#ed2025]"
                 >
-                  <option value="BUYER">Parts Buyer (Submit &amp; Track Requests)</option>
-                  <option value="FINANCE">Finance (Access Invoices &amp; Authorize Payments)</option>
-                  <option value="ORG_ADMIN">Company Administrator (Full Access)</option>
+                  <option value="Parts Specialist">Parts Specialist (Submit &amp; Track Requests)</option>
+                  <option value="Workshop Manager">Workshop Manager (Team Oversight)</option>
+                  <option value="Accounts Payable">Accounts Payable (Invoices &amp; Payments)</option>
+                  <option value="Account Admin">Account Admin (Full Access)</option>
                 </select>
               </div>
 
