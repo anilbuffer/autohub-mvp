@@ -21,7 +21,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { saveCustomers, getStoredCustomers } from "@/lib/store";
+import { saveCustomers, getStoredCustomers, setActiveCustomerId, setActiveRole } from "@/lib/store";
 import { TradeCustomer } from "@/lib/types";
 
 interface SavedAddress {
@@ -39,6 +39,7 @@ export default function RegisterPage() {
   const [submitted, setSubmitted] = useState(false);
   const [appReference, setAppReference] = useState("");
   const [submissionTimestamp, setSubmissionTimestamp] = useState("");
+  const [registeredCustomerId, setRegisteredCustomerId] = useState("");
 
   const [formData, setFormData] = useState({
     // Step 1: Business details
@@ -211,6 +212,10 @@ export default function RegisterPage() {
     const existing = getStoredCustomers();
     saveCustomers([newCustomer, ...existing]);
 
+    setRegisteredCustomerId(newCustomerId);
+    setActiveCustomerId(newCustomerId);
+    setActiveRole("CUSTOMER");
+
     setSubmitted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -374,8 +379,19 @@ export default function RegisterPage() {
 
             <div className="pt-4 flex flex-wrap justify-center gap-4">
               <Link
+                href="/portal"
+                onClick={() => {
+                  if (registeredCustomerId) setActiveCustomerId(registeredCustomerId);
+                  setActiveRole("CUSTOMER");
+                }}
+                className="px-6 py-2.5 bg-[#ed2025] hover:bg-[#d3181d] text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5"
+              >
+                <span>Enter Customer Portal ({formData.tradingName})</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
                 href="/login"
-                className="px-6 py-2.5 bg-autohub-navy text-white text-xs font-bold rounded-xl shadow hover:bg-autohub-navy-dark transition"
+                className="px-6 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow hover:bg-slate-800 transition"
               >
                 Go to Sign In
               </Link>

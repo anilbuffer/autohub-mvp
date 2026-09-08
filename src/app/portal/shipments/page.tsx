@@ -16,12 +16,13 @@ import {
   ArrowRight,
   Package,
 } from "lucide-react";
-import { getStoredRequests, subscribeToStore } from "@/lib/store";
+import { getStoredRequests, completePartRequest, subscribeToStore } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
 
 export default function ShipmentsPage() {
   const [requests, setRequests] = useState<PartRequest[]>([]);
   const [filter, setFilter] = useState("ALL");
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setRequests(getStoredRequests());
@@ -31,14 +32,42 @@ export default function ShipmentsPage() {
     return unsub;
   }, []);
 
-  // Filter requests that have shipment information or are in transit/delivered
+  const handleSignOffCompleted = (reqId: string, custName: string) => {
+    completePartRequest(reqId, custName, "CUSTOMER", "Customer workshop signed off delivery and completed order.");
+    setActionNotice(`Order ${reqId} successfully completed and archived.`);
+    setTimeout(() => setActionNotice(null), 4000);
+  };
+
+  // Filter requests that have shipment information or are in transit/delivered/completed
   const shipmentRequests = requests.filter((r) => {
     const isRelevant =
       r.shipment ||
-      ["ORDERED_FROM_SUPPLIER", "SUPPLIER_DISPATCHED", "IN_TRANSIT", "CUSTOMS_CLEARANCE", "OUT_FOR_DELIVERY", "DELIVERED"].includes(r.status);
+      [
+        "ORDERED_FROM_SUPPLIER",
+        "SUPPLIER_DISPATCHED",
+        "RECEIVED_AT_SHIPPING_FACILITY",
+        "IN_TRANSIT",
+        "ARRIVED_IN_NZ",
+        "CUSTOMS_CLEARANCE",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+        "COMPLETED",
+      ].includes(r.status);
     if (!isRelevant) return false;
-    if (filter === "IN_TRANSIT") return r.status === "IN_TRANSIT" || r.status === "SUPPLIER_DISPATCHED" || r.status === "CUSTOMS_CLEARANCE";
-    if (filter === "DELIVERED") return r.status === "DELIVERED";
+    if (filter === "IN_TRANSIT") {
+      return [
+        "ORDERED_FROM_SUPPLIER",
+        "SUPPLIER_DISPATCHED",
+        "RECEIVED_AT_SHIPPING_FACILITY",
+        "IN_TRANSIT",
+        "ARRIVED_IN_NZ",
+        "CUSTOMS_CLEARANCE",
+        "OUT_FOR_DELIVERY",
+      ].includes(r.status);
+    }
+    if (filter === "DELIVERED") {
+      return r.status === "DELIVERED" || r.status === "COMPLETED";
+    }
     return true;
   });
 
@@ -95,6 +124,13 @@ export default function ShipmentsPage() {
           </button>
         </div>
       </div>
+
+      {actionNotice && (
+        <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-900 font-semibold flex items-center gap-2 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <span>{actionNotice}</span>
+        </div>
+      )}
 
       {/* Shipments Cards Grid */}
       <div className="space-y-4">
@@ -234,18 +270,36 @@ export default function ShipmentsPage() {
                   </div>
                 </div>
 
-                {/* Card Action Link */}
-                <div className="flex items-center justify-between pt-2">
+                {/* Card Action Link & Sign-Off */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
                   <span className="text-xs text-slate-500">
-                    Destination Address: <strong>{req.deliveryAddress.street}, {req.deliveryAddress.suburb}, {req.deliveryAddress.city}</strong>
+                    Destination: <strong>{req.deliveryAddress.street}, {req.deliveryAddress.city}</strong>
                   </span>
-                  <Link
-                    href={`/portal/requests/${req.id}`}
-                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm"
-                  >
-                    <span>Full Request & Logistics View</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    {req.status === "DELIVERED" && (
+                      <button
+                        type="button"
+                        onClick={() => handleSignOffCompleted(req.id, req.customerName)}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Sign Off & Complete</span>
+                      </button>
+                    )}
+                    {req.status === "COMPLETED" && (
+                      <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Completed &amp; Closed</span>
+                      </span>
+                    )}
+                    <Link
+                      href={`/portal/requests/${req.id}`}
+                      className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm"
+                    >
+                      <span>Full View</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             );

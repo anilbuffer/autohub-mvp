@@ -19,7 +19,7 @@ import {
   Sparkles,
   Info
 } from "lucide-react";
-import { getStoredRequests, subscribeToStore } from "@/lib/store";
+import { getStoredRequests, resolveSourcingException, subscribeToStore } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
 
 interface SourcingException {
@@ -41,63 +41,63 @@ interface SourcingException {
 const INITIAL_EXCEPTIONS: SourcingException[] = [
   {
     id: "EXC-101",
-    requestId: "REQ-2024-001",
+    requestId: "REQ-000130",
     partNumber: "13568-19195",
     partDescription: "Timing Belt Kit OEM Toyota",
-    customerName: "Auckland Euro Ltd",
-    supplierName: "Tokyo Parts Direct",
+    customerName: "AutoCare Auckland",
+    supplierName: "Nagoya Auto Direct K.K.",
     country: "JP",
     type: "SUPERSEDED",
     severity: "MEDIUM",
     details: "OEM Part 13568-19195 superseded by Toyota Global to 13568-19205. Includes upgraded Kevlar tensile cord.",
-    resolutionOptions: ["Adopt Superseded Part #13568-19205", "Request Stock Check on Legacy #", "Contact Account Manager"],
+    resolutionOptions: ["Adopt Superseded Part #13568-19205", "Request Stock Check on Legacy #", "Contact Workshop Manager"],
     status: "OPEN",
-    createdAt: "2024-03-29 09:15"
+    createdAt: "Today 09:15"
   },
   {
     id: "EXC-102",
-    requestId: "REQ-2024-002",
+    requestId: "REQ-000131",
     partNumber: "06A145704T",
     partDescription: "BorgWarner K03 Turbocharger Core",
-    customerName: "Southern European Workshop",
-    supplierName: "Bavaria Auto Spares",
+    customerName: "Canterbury Commercial Fleet Services",
+    supplierName: "Hanseatic Auto Wholesale GmbH",
     country: "DE",
     type: "PRICE_VARIANCE",
     severity: "HIGH",
     details: "Supplier revised quote from €720 to €840 due to raw material surcharge. Exceeds customer preliminary budget by 16.7%.",
     resolutionOptions: ["Absorb Variance via Margin", "Issue Revised Quote to Customer", "Check Alternate Supplier (US Hub)"],
     status: "CUSTOMER_REVIEW",
-    createdAt: "2024-03-29 08:30"
+    createdAt: "Today 08:30"
   },
   {
     id: "EXC-103",
-    requestId: "REQ-2024-004",
+    requestId: "REQ-000140",
     partNumber: "48815-30580",
     partDescription: "Front Stabilizer Bar Bushing Set",
-    customerName: "Waikato Fleet Solutions",
-    supplierName: "Yokohama Logistics Center",
+    customerName: "AutoCare Auckland",
+    supplierName: "Osaka EuroTech Spares",
     country: "JP",
     type: "BACKORDER",
     severity: "MEDIUM",
     details: "Supplier reported 14-day production delay at factory. Estimated export date delayed from 02 Apr to 16 Apr.",
-    resolutionOptions: ["Expedite via Air Freight (Tokyo Hub)", "Approve 14-day delay", "Source OEM equivalent aftermarket"],
+    resolutionOptions: ["Expedite via Air Freight (Nagoya Hub)", "Approve 14-day factory delay", "Source OEM equivalent aftermarket"],
     status: "OPEN",
-    createdAt: "2024-03-28 16:45"
+    createdAt: "Yesterday 16:45"
   },
   {
     id: "EXC-104",
-    requestId: "REQ-2024-005",
+    requestId: "REQ-000141",
     partNumber: "22030-0P010",
     partDescription: "Electronic Throttle Body Assembly",
-    customerName: "Apex Performance & Dyno",
-    supplierName: "Nagoya Auto Parts",
+    customerName: "EuroTech Waikato",
+    supplierName: "Nagoya Auto Direct K.K.",
     country: "JP",
     type: "OBSOLETE",
     severity: "HIGH",
     details: "Factory discontinued production of genuine assembly. Only remanufactured units or Denso aftermarket available.",
     resolutionOptions: ["Offer Denso Remanufactured Unit", "Query US Depot for NOS (New Old Stock)", "Cancel Part Request"],
     status: "OPEN",
-    createdAt: "2024-03-28 11:20"
+    createdAt: "Yesterday 11:20"
   }
 ];
 
@@ -121,6 +121,14 @@ export default function ProcurementExceptionsPage() {
   });
 
   const handleApplyResolution = (exceptionId: string, chosenOption: string) => {
+    const found = exceptions.find((e) => e.id === exceptionId);
+    if (found && found.requestId) {
+      resolveSourcingException(
+        found.requestId,
+        "Nathan Cole (Sourcing Lead)",
+        `Resolution applied: ${chosenOption}. Part cleared for procurement queue.`
+      );
+    }
     setExceptions((prev) =>
       prev.map((exc) =>
         exc.id === exceptionId
@@ -128,7 +136,7 @@ export default function ProcurementExceptionsPage() {
           : exc
       )
     );
-    setResolutionSuccess(`Exception ${exceptionId} resolved: ${chosenOption}`);
+    setResolutionSuccess(`Exception ${exceptionId} resolved: ${chosenOption}. Request returned to active Sourcing Queue.`);
     setActiveResolution(null);
     setTimeout(() => setResolutionSuccess(null), 4000);
   };
@@ -348,10 +356,10 @@ export default function ProcurementExceptionsPage() {
 
                   <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                     <Link
-                      href={`/procurement/queue`}
+                      href={`/portal/requests/${exc.requestId}`}
                       className="text-[#ed2025] hover:underline flex items-center gap-1 font-bold transition"
                     >
-                      Inspect in Queue
+                      View Request ({exc.requestId})
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <span className="text-slate-400 text-[11px]">Auto-audit logged</span>

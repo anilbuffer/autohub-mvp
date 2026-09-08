@@ -22,7 +22,7 @@ import {
   FileText,
   X,
 } from "lucide-react";
-import { getStoredRequests, saveRequests, subscribeToStore } from "@/lib/store";
+import { getStoredRequests, updateShipmentStage, completePartRequest, subscribeToStore } from "@/lib/store";
 import { PartRequest, TimelineEvent, RequestStatus } from "@/lib/types";
 
 const STAGES = [
@@ -32,6 +32,7 @@ const STAGES = [
   { id: 4, name: "NZ Customs Clearance", code: "CUSTOMS_CLEARED", description: "Auckland cargo terminal clearance" },
   { id: 5, name: "MPI Biosecurity", code: "BIOSECURITY_PASS", description: "Ministry for Primary Industries released" },
   { id: 6, name: "Workshop Delivery", code: "DELIVERED", description: "Courier drop at customer workshop bay" },
+  { id: 7, name: "Completed & Closed", code: "COMPLETED", description: "Full lifecycle completed and signed off" },
 ];
 
 const stageToStatus: Record<number, RequestStatus> = {
@@ -41,10 +42,12 @@ const stageToStatus: Record<number, RequestStatus> = {
   4: "CUSTOMS_CLEARANCE",
   5: "ARRIVED_IN_NZ",
   6: "DELIVERED",
+  7: "COMPLETED",
 };
 
 const getStageFromStatus = (status: RequestStatus): number => {
-  if (status === "DELIVERED" || status === "COMPLETED") return 6;
+  if (status === "COMPLETED") return 7;
+  if (status === "DELIVERED") return 6;
   if (status === "ARRIVED_IN_NZ") return 5;
   if (status === "CUSTOMS_CLEARANCE") return 4;
   if (status === "IN_TRANSIT") return 3;
@@ -77,36 +80,35 @@ export default function OperationsShipmentsPage() {
     setSelectedRequest(req);
     const stage = getStageFromStatus(req.status);
     setModalStage(stage);
-    setModalWaybill(req.part?.oemPartNumber ? `AWB-NZ-${req.id.replace("REQ-", "")}-78` : "AWB-8921-391");
+    setModalWaybill(req.shipment?.trackingNumber || (req.part?.oemPartNumber ? `AWB-NZ-${req.id.replace("REQ-", "")}-78` : "AWB-8921-391"));
   };
 
   const handleUpdateMilestone = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRequest) return;
 
-    const newEvent: TimelineEvent = {
-      status: STAGES[modalStage - 1].name,
-      timestamp: new Date().toISOString().replace("T", " ").slice(0, 16),
-      description: `${modalCarrier} (${modalWaybill || "N/A"}) - ${modalLocation}. ${modalNotes}`,
-    };
-
     const newStatus: RequestStatus = stageToStatus[modalStage] || "IN_TRANSIT";
 
-    // Update central store which broadcasts real-time across all tabs
-    const currentList = getStoredRequests();
-    const updated = currentList.map((r) => {
-      if (r.id === selectedRequest.id) {
-        return {
-          ...r,
-          status: newStatus,
-          timeline: [...(r.timeline || []), newEvent],
-        };
-      }
-      return r;
-    });
-    saveRequests(updated);
+    if (newStatus === "COMPLETED") {
+      completePartRequest(
+        selectedRequest.id,
+        "Liam Patel (Operations)",
+        "OPERATIONS",
+        modalNotes || "Order completed and delivery signed off."
+      );
+    } else {
+      updateShipmentStage(
+        selectedRequest.id,
+        newStatus,
+        modalCarrier,
+        modalWaybill || selectedRequest.shipment?.trackingNumber || "AWB-8921-391",
+        modalLocation,
+        "Liam Patel (Operations)",
+        modalNotes
+      );
+    }
 
-    setIsSuccessMessage(`Shipment milestone for ${selectedRequest.referenceNumber || selectedRequest.id} successfully updated to Stage ${modalStage} (${STAGES[modalStage - 1].name})!`);
+    setIsSuccessMessage(`Shipment milestone for ${selectedRequest.referenceNumber || selectedRequest.id} successfully updated to Stage ${modalStage} (${STAGES[modalStage - 1].name}) across all portals in real-time!`);
     setSelectedRequest(null);
     setTimeout(() => setIsSuccessMessage(null), 5000);
   };

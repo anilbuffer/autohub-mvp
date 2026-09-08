@@ -22,6 +22,7 @@ import {
 import {
   getStoredRequests,
   updateShipmentStage,
+  completePartRequest,
   subscribeToStore,
 } from "@/lib/store";
 import { PartRequest, RequestStatus, LogisticsMilestone } from "@/lib/types";
@@ -104,6 +105,9 @@ export default function AdminShipmentsPage() {
     } else if (stage === "DELIVERED") {
       setLocationName(selectedReq?.deliveryAddress.street + ", " + selectedReq?.deliveryAddress.city);
       setMilestoneNotes("Signed proof of delivery receipt obtained at customer workshop depot.");
+    } else if (stage === "COMPLETED") {
+      setLocationName(selectedReq?.deliveryAddress.street + ", " + selectedReq?.deliveryAddress.city);
+      setMilestoneNotes("Full procurement lifecycle officially signed off and completed.");
     } else {
       setLocationName("Tokyo Narita Air Cargo Terminal / Export Port Hub");
       setMilestoneNotes("Consignment processed and manifested for international dispatch.");
@@ -115,15 +119,24 @@ export default function AdminShipmentsPage() {
     e.preventDefault();
     if (!selectedReq) return;
 
-    updateShipmentStage(
-      selectedReq.id,
-      newStage,
-      carrierInput,
-      trackingInput,
-      locationName,
-      "Liam Patel",
-      milestoneNotes
-    );
+    if (newStage === "COMPLETED") {
+      completePartRequest(
+        selectedReq.id,
+        "Liam Patel",
+        "ADMIN",
+        milestoneNotes || "Consignment signed off and closed by Operations Administrator."
+      );
+    } else {
+      updateShipmentStage(
+        selectedReq.id,
+        newStage,
+        carrierInput,
+        trackingInput,
+        locationName,
+        "Liam Patel",
+        milestoneNotes
+      );
+    }
 
     setMilestoneModalOpen(false);
     refresh();
@@ -288,7 +301,15 @@ export default function AdminShipmentsPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/portal/requests/${selectedReq.id}`}
+                      target="_blank"
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Customer Portal</span>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => handleOpenMilestoneModal("CUSTOMS_CLEARANCE")}
@@ -312,6 +333,14 @@ export default function AdminShipmentsPage() {
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Mark Delivered</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenMilestoneModal("COMPLETED")}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs transition shadow-xs flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Sign Off &amp; Complete</span>
                     </button>
                   </div>
                 </div>
@@ -434,6 +463,7 @@ export default function AdminShipmentsPage() {
                   <option value="CUSTOMS_CLEARANCE">Customs &amp; MPI Biosecurity Clearance</option>
                   <option value="OUT_FOR_DELIVERY">Out for Local Delivery (Domestic Courier)</option>
                   <option value="DELIVERED">Delivered (Completed Workshop Handover)</option>
+                  <option value="COMPLETED">Completed (Consignment Signed Off &amp; Lifecycle Closed)</option>
                 </select>
               </div>
 

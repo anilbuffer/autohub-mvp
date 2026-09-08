@@ -29,6 +29,7 @@ import {
   requestQuoteRevision,
   confirmPayment,
   updateRequestStatus,
+  completePartRequest,
   subscribeToStore,
   getActiveRole,
   getStoredCustomers,
@@ -146,6 +147,15 @@ export default function RequestDetailPage() {
       "TRADE_CREDIT",
       request.customerName,
       "Executed against approved 20th of the month trade credit line"
+    );
+  };
+
+  const handleCompleteOrder = () => {
+    completePartRequest(
+      request.id,
+      customer?.tradingName || request.customerName,
+      "CUSTOMER",
+      "Customer confirmed parts inspection and approved final order completion sign-off."
     );
   };
 
@@ -839,6 +849,43 @@ export default function RequestDetailPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Delivery Completion Sign-Off Action */}
+              {request.status === "DELIVERED" && (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">Consignment Delivered — Ready for Sign-Off</h4>
+                      <p className="text-xs text-slate-600">
+                        Parts have been delivered to your workshop bay. Confirm inspection to conclude this procurement order.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCompleteOrder}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs rounded-xl transition shadow flex items-center justify-center gap-1.5 self-start sm:self-auto"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Sign Off & Mark Completed</span>
+                  </button>
+                </div>
+              )}
+
+              {request.status === "COMPLETED" && (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-xs text-emerald-900">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <div>
+                    <span className="font-bold">Order Lifecycle Completed & Closed</span>
+                    <p className="text-slate-600 text-[11px] mt-0.5">
+                      All door-to-door logistics milestones and inspection sign-offs have concluded. IRD Tax Invoice and POD docket remain archived.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

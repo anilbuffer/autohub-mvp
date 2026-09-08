@@ -37,8 +37,8 @@ const PORTAL_PROFILES: Record<string, PortalProfileInfo> = {
     avatarBg: "bg-red-600 text-white shadow-sm",
     name: "Autohub Admin",
     title: "Operations Desk",
-    org: "Autohub Admin Console",
-    detail: "Unified Operations & Governance",
+    org: "Autohub Head Office",
+    detail: "admin@autohub.co.nz",
     badge: "ADMINISTRATOR",
     settingsLink: {
       label: "System Settings",
@@ -50,7 +50,7 @@ const PORTAL_PROFILES: Record<string, PortalProfileInfo> = {
     avatarInitials: "JW",
     avatarBg: "bg-blue-600 text-white shadow-sm",
     name: "James Wilson",
-    title: "Customer",
+    title: "Service Manager",
     org: "AutoCare Auckland",
     detail: "NZBN: 9429041234567",
     badge: "TRADE CUSTOMER",
@@ -62,12 +62,12 @@ const PORTAL_PROFILES: Record<string, PortalProfileInfo> = {
   },
   procurement: {
     avatarInitials: "NC",
-    avatarBg: "bg-[#ed2025]/20 text-[#ed2025] shadow-sm ring-1 ring-[#ed2025]/30",
+    avatarBg: "bg-amber-600 text-white shadow-sm",
     name: "Nathan Cole",
-    title: "Nagoya / Tokyo Desk",
-    org: "Nathan Cole",
+    title: "Sourcing Specialist",
+    org: "Tokyo & Nagoya Desk",
     detail: "nathan.cole@autohub.co.nz",
-    badge: "SOURCING SPECIALIST",
+    badge: "SOURCING DESK",
     settingsLink: {
       label: "Supplier Directory",
       href: "/procurement/suppliers",
@@ -76,28 +76,28 @@ const PORTAL_PROFILES: Record<string, PortalProfileInfo> = {
   },
   operations: {
     avatarInitials: "LP",
-    avatarBg: "bg-[#ed2025] text-white shadow-sm",
+    avatarBg: "bg-cyan-600 text-white shadow-sm",
     name: "Liam Patel",
-    title: "Logistics & Customs Lead",
-    org: "Liam Patel",
-    detail: "Autohub Freight & Customs Desk",
-    badge: "OPERATIONS LEAD",
+    title: "Logistics Lead",
+    org: "Auckland Port & Depot",
+    detail: "liam.patel@autohub.co.nz",
+    badge: "LOGISTICS DESK",
     settingsLink: {
       label: "Live Tracking & Fleet",
-      href: "/operations",
+      href: "/operations/shipments",
     },
   },
   finance: {
     avatarInitials: "CJ",
-    avatarBg: "bg-[#ed2025] text-white shadow-sm",
+    avatarBg: "bg-emerald-600 text-white shadow-sm",
     name: "Clara Jenkins",
     title: "Finance Officer",
-    org: "Clara Jenkins",
-    detail: "Autohub Treasury & Accounts Desk",
+    org: "Autohub Treasury & Accounts",
+    detail: "clara.jenkins@autohub.co.nz",
     badge: "FINANCE DESK",
     settingsLink: {
-      label: "Billing & Treasury Desk",
-      href: "/finance",
+      label: "Ledger & Invoices",
+      href: "/finance/invoices",
     },
   },
 };
@@ -205,22 +205,33 @@ export const SidebarUserProfile: React.FC<SidebarUserProfileProps> = ({
       {isOpen && (
         <div
           role="menu"
-          className="absolute bottom-20 left-2 sm:left-3 w-72 max-w-[calc(100vw-1.5rem)] bg-slate-900/98 backdrop-blur-xl border border-slate-700/90 rounded-2xl p-2.5 shadow-2xl shadow-black/80 space-y-2 text-xs text-slate-300 z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+          className={`absolute ${
+            sidebarCollapsed
+              ? "left-[calc(100%+0.75rem)] bottom-0"
+              : "bottom-[calc(100%+0.75rem)] left-2 sm:left-3"
+          } w-80 max-w-[calc(100vw-2rem)] bg-[#0b1324] border border-slate-700/80 rounded-2xl p-3 shadow-2xl shadow-black/95 space-y-2.5 text-xs text-slate-300 z-50 animate-in fade-in-0 zoom-in-95 duration-150 ring-1 ring-white/10`}
         >
           {/* Top User Info Card */}
-          <div className="px-2.5 py-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="font-bold text-white text-xs truncate leading-tight">
-                  {profile.org}
+          <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs flex-shrink-0 shadow-sm ${profile.avatarBg}`}
+              >
+                {profile.avatarInitials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="font-bold text-white text-xs truncate leading-tight">
+                    {profile.name}
+                  </span>
+                  <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-700/90 text-slate-200 border border-slate-600/70 whitespace-nowrap flex-shrink-0">
+                    {profile.badge}
+                  </span>
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-medium">
                   {profile.detail}
                 </div>
               </div>
-              <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-700/80 text-slate-300 border border-slate-600/60 whitespace-nowrap">
-                {profile.badge}
-              </span>
             </div>
           </div>
 
@@ -229,30 +240,30 @@ export const SidebarUserProfile: React.FC<SidebarUserProfileProps> = ({
             <Link
               href={profile.settingsLink.href}
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition text-xs font-medium"
             >
               {profile.settingsLink.icon ? (
-                <profile.settingsLink.icon className="w-3.5 h-3.5 text-slate-400" />
+                <profile.settingsLink.icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
               ) : (
-                <Settings className="w-3.5 h-3.5 text-slate-400" />
+                <Settings className="w-4 h-4 text-slate-400 flex-shrink-0" />
               )}
               <span className="truncate">{profile.settingsLink.label}</span>
             </Link>
           )}
 
           {/* ================= SWITCH ROLE OF ALL PORTALS ================= */}
-          <div className="border-t border-slate-800/90 pt-2">
-            <div className="px-2 pb-1.5 flex items-center justify-between">
+          <div className="border-t border-slate-800 pt-2.5">
+            <div className="px-1.5 pb-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                <Layers className="w-3 h-3 text-[#ed2025]" />
+                <Layers className="w-3.5 h-3.5 text-[#ed2025]" />
                 <span>Switch Portal Role</span>
               </div>
-              <span className="text-[9px] font-bold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700/80">
+              <span className="text-[9px] font-bold text-slate-400 bg-slate-800/90 px-1.5 py-0.5 rounded border border-slate-700/80">
                 5 Portals
               </span>
             </div>
 
-            <div className="space-y-0.5 mt-0.5">
+            <div className="space-y-1">
               {PORTALS.map((portal) => {
                 const isCurrent = portal.id === currentPortal;
                 const Icon = portal.icon;
@@ -262,42 +273,42 @@ export const SidebarUserProfile: React.FC<SidebarUserProfileProps> = ({
                     key={portal.id}
                     type="button"
                     onClick={() => handleSwitchPortal(portal)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-xl flex items-center justify-between transition group ${
+                    className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition group ${
                       isCurrent
-                        ? "bg-slate-800 text-white font-bold border border-slate-700/90 shadow-sm"
-                        : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                        ? "bg-slate-800 text-white font-semibold border border-slate-700/90 shadow-sm"
+                        : "text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${
                           isCurrent
                             ? "bg-[#ed2025] text-white shadow-sm shadow-red-600/30"
                             : `${portal.color} border`
                         }`}
                       >
-                        <Icon className="w-3 h-3" />
+                        <Icon className="w-3.5 h-3.5" />
                       </div>
 
                       <div className="min-w-0">
-                        <div className="text-xs leading-tight font-medium truncate flex items-center gap-1.5">
+                        <div className="text-xs leading-tight font-medium truncate">
                           <span className={isCurrent ? "font-bold text-white" : ""}>
                             {portal.label}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-400 leading-tight truncate">
+                        <div className="text-[10px] text-slate-400 leading-tight truncate mt-0.5">
                           {portal.badge}
                         </div>
                       </div>
                     </div>
 
                     {isCurrent ? (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-700/60 px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1">
+                      <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-full flex-shrink-0 ml-1.5">
                         <Check className="w-2.5 h-2.5" />
                         Active
                       </span>
                     ) : (
-                      <ArrowRight className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
                     )}
                   </button>
                 );
@@ -306,11 +317,11 @@ export const SidebarUserProfile: React.FC<SidebarUserProfileProps> = ({
           </div>
 
           {/* ================= FOOTER ACTIONS ================= */}
-          <div className="border-t border-slate-800/90 pt-1.5 mt-1 space-y-0.5">
+          <div className="border-t border-slate-800 pt-2 space-y-0.5">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
+              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition text-xs font-medium"
             >
               <Home className="w-3.5 h-3.5 text-slate-400" />
               <span>Public Website</span>
@@ -319,7 +330,7 @@ export const SidebarUserProfile: React.FC<SidebarUserProfileProps> = ({
             <button
               type="button"
               onClick={handleSignOut}
-              className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition font-medium"
+              className="w-full text-left flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition text-xs font-medium"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-400" />
               <span>Sign Out</span>

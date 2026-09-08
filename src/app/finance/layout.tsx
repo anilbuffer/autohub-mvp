@@ -115,6 +115,7 @@ export default function FinanceLayout({
           badgeColor: "bg-[#ed2025]",
         },
         { label: "Invoices & Receipts", href: "/finance/invoices", icon: Receipt },
+        { label: "Trade Credit Accounts", href: "/finance/credit", icon: Building },
         { label: "Refunds", href: "/finance/refunds", icon: RotateCcw },
         { label: "Ledger Transactions", href: "/finance/transactions", icon: FileText },
         { label: "Financial Reports", href: "/finance/reports", icon: BarChart3 },

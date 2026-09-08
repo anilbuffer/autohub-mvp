@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -17,6 +17,8 @@ import {
   Info,
   RefreshCw,
 } from "lucide-react";
+import { getStoredRequests, resolveLogisticsException, subscribeToStore } from "@/lib/store";
+import { PartRequest } from "@/lib/types";
 
 interface LogisticsHold {
   id: string;
@@ -35,21 +37,21 @@ interface LogisticsHold {
 const INITIAL_HOLDS: LogisticsHold[] = [
   {
     id: "HOLD-301",
-    requestId: "REQ-2024-002",
-    customerName: "Southern European Workshop",
+    requestId: "REQ-000142",
+    customerName: "Canterbury Commercial Fleet Services",
     consignment: "BorgWarner K03 Turbocharger Core",
-    carrier: "DHL Express (AWB-NZ-002-981)",
+    carrier: "DHL Express (AWB-NZ-000142-981)",
     type: "CUSTOMS_HOLD",
     severity: "CRITICAL",
     description: "NZ Customs held clearance at Auckland Cargo Terminal. Commercial invoice requires HS Code 8414.80 and country of origin declaration certificate.",
     resolutionOptions: ["Attach Supplier EUR.1 Certificate & HS Code", "Submit Urgent Customs Broker Amendment", "Hold for Workshop Clearance"],
     status: "PENDING_RELEASE",
-    dateLogged: "2024-03-29 08:45"
+    dateLogged: "Today 08:45"
   },
   {
     id: "HOLD-302",
-    requestId: "REQ-2024-003",
-    customerName: "Waikato Fleet Solutions",
+    requestId: "REQ-000126",
+    customerName: "AutoCare Auckland",
     consignment: "Denso Common Rail Diesel Injectors (Set of 4)",
     carrier: "Mainfreight Ocean (CBM-NRT-884)",
     type: "BIOSECURITY_INSPECTION",
@@ -57,12 +59,12 @@ const INITIAL_HOLDS: LogisticsHold[] = [
     description: "MPI biosecurity quarantine flag: Container require random phytosanitary inspection for BMSB (Brown Marmorated Stink Bug) compliance.",
     resolutionOptions: ["Authorize $145 MPI Inspection Fee", "Present Japanese Heat Treatment Cert #HT-891", "Request Expedited Ramp Inspection"],
     status: "PENDING_RELEASE",
-    dateLogged: "2024-03-28 14:10"
+    dateLogged: "Yesterday 14:10"
   },
   {
     id: "HOLD-303",
-    requestId: "REQ-2024-001",
-    customerName: "Auckland Euro Workshop",
+    requestId: "REQ-000125",
+    customerName: "AutoCare Auckland",
     consignment: "ZF 8HP Transmission Valve Body & Solenoid Pack",
     carrier: "Air New Zealand Cargo (ANZ-89)",
     type: "FLIGHT_DELAY",
@@ -70,20 +72,38 @@ const INITIAL_HOLDS: LogisticsHold[] = [
     description: "Narita to Auckland direct cargo flight ANZ-89 delayed by 18 hours due to typhoon weather routing.",
     resolutionOptions: ["Update ETA in Customer Portal (+1 Day)", "Rebook via Sydney Air Transit Hub", "Acknowledge Flight Schedule Change"],
     status: "PENDING_RELEASE",
-    dateLogged: "2024-03-28 10:00"
+    dateLogged: "Yesterday 10:00"
   }
 ];
 
 export default function OperationsExceptionsPage() {
+  const [requests, setRequests] = useState<PartRequest[]>([]);
   const [holds, setHolds] = useState<LogisticsHold[]>(INITIAL_HOLDS);
   const [filterType, setFilterType] = useState<string>("ALL");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setRequests(getStoredRequests());
+    const unsub = subscribeToStore(() => {
+      setRequests(getStoredRequests());
+    });
+    return unsub;
+  }, []);
+
   const handleResolveHold = (holdId: string, action: string) => {
+    const hold = holds.find((h) => h.id === holdId);
+    if (hold && hold.requestId) {
+      resolveLogisticsException(
+        hold.requestId,
+        "CUSTOMS_CLEARANCE",
+        `Resolution applied: ${action}. Released to Auckland port clearance pipeline.`,
+        "Liam Patel (Operations Lead)"
+      );
+    }
     setHolds((prev) =>
       prev.map((h) => (h.id === holdId ? { ...h, status: "RESOLVED" } : h))
     );
-    setSuccessMessage(`Hold ${holdId} resolved: ${action}. Consignment released for delivery pipeline.`);
+    setSuccessMessage(`Hold ${holdId} (${hold?.requestId || ""}) resolved: ${action}. Consignment released for delivery pipeline in real-time.`);
     setTimeout(() => setSuccessMessage(null), 5000);
   };
 
@@ -208,6 +228,22 @@ export default function OperationsExceptionsPage() {
                   <p className="text-xs text-slate-700 bg-white/70 p-3 rounded-xl border border-slate-200/60 leading-relaxed">
                     {hold.description}
                   </p>
+
+                  <div className="pt-2 flex items-center justify-between text-xs">
+                    <Link
+                      href={`/portal/requests/${hold.requestId}`}
+                      className="text-[#ed2025] hover:underline flex items-center gap-1 font-bold transition text-xs"
+                    >
+                      View Consignment Request ({hold.requestId})
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <Link
+                      href="/operations/shipments"
+                      className="text-slate-500 hover:text-slate-800 flex items-center gap-1 text-[11px]"
+                    >
+                      Shipments Console →
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Resolution Action Buttons */}

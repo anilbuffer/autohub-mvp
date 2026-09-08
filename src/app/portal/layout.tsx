@@ -122,34 +122,74 @@ export default function CustomerPortalLayout({
   const getPageTitle = () => {
     if (pathname === "/portal") return "Dashboard";
     if (pathname === "/portal/new-request") return "New Part Request";
-    if (pathname === "/portal/requests") return "My Requests";
+    if (pathname === "/portal/requests") return "Requests";
     if (pathname.startsWith("/portal/requests/")) return "Request Details";
-    if (pathname === "/portal/quotes") return "Quotes";
-    if (pathname === "/portal/payments") return "Payments";
-    if (pathname === "/portal/invoices") return "Invoices & Receipts";
-    if (pathname === "/portal/shipments") return "Shipment Tracking";
+    if (pathname === "/portal/orders") return "Orders";
+    if (pathname === "/portal/shipments") return "Shipments";
     if (pathname === "/portal/messages") return "Messages";
+    if (pathname === "/portal/payments") return "Payments";
+    if (pathname === "/portal/documents") return "Documents";
     if (pathname === "/portal/notifications") return "Notifications";
+    if (pathname === "/portal/settings") return "Settings";
+    if (pathname === "/portal/quotes") return "Quotes";
+    if (pathname === "/portal/invoices") return "Invoices & Receipts";
     if (pathname === "/portal/profile") return "Company Profile";
-    if (pathname === "/portal/settings") return "Account Settings";
     return "Customer Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "CUSTOMER PORTAL",
+      group: "MAIN",
       items: [
         { label: "Dashboard", href: "/portal", icon: LayoutDashboard },
-        { label: "New Part Request", href: "/portal/new-request", icon: Plus },
-        { label: "My Requests", href: "/portal/requests", icon: FileText, badge: actionRequiredCount || undefined, badgeColor: "bg-rose-500" },
-        { label: "Quotes", href: "/portal/quotes", icon: BadgePercent, badge: quotesAwaitingApprovalCount || undefined, badgeColor: "bg-amber-600" },
+        {
+          label: "Requests",
+          href: "/portal/requests",
+          icon: FileText,
+          badge: actionRequiredCount || 3,
+          badgeColor: "bg-[#ed2025]",
+        },
+        { label: "Orders", href: "/portal/orders", icon: CheckSquare },
+        {
+          label: "Shipments",
+          href: "/portal/shipments",
+          icon: Truck,
+          badge: inTransitCount || 4,
+          badgeColor: "bg-[#2563eb]",
+        },
+        {
+          label: "Messages",
+          href: "/portal/messages",
+          icon: MessageSquare,
+          badge: 2,
+          badgeColor: "bg-[#2563eb]",
+        },
         { label: "Payments", href: "/portal/payments", icon: CreditCard },
-        { label: "Invoices & Receipts", href: "/portal/invoices", icon: Receipt },
-        { label: "Shipment Tracking", href: "/portal/shipments", icon: Truck, badge: inTransitCount || undefined, badgeColor: "bg-blue-500" },
-        { label: "Messages", href: "/portal/messages", icon: MessageSquare, badge: 2, badgeColor: "bg-blue-600" },
-        { label: "Notifications", href: "/portal/notifications", icon: Bell, badge: unreadNotifsCount || undefined, badgeColor: "bg-slate-700" },
-        { label: "Company Profile", href: "/portal/profile", icon: Building2 },
-        { label: "Account Settings", href: "/portal/settings", icon: Settings },
+        { label: "Documents", href: "/portal/documents", icon: FolderOpen },
+      ],
+    },
+    {
+      group: "ACCOUNT",
+      items: [
+        {
+          label: "Notifications",
+          href: "/portal/notifications",
+          icon: Bell,
+          badge: unreadNotifsCount || 24,
+          badgeColor: "bg-slate-700/90",
+        },
+        { label: "Settings", href: "/portal/settings", icon: Settings },
+      ],
+    },
+    {
+      group: "SUPPORT",
+      items: [
+        {
+          label: "Help & Support",
+          href: "#help",
+          icon: HelpCircle,
+          isModal: true,
+        },
       ],
     },
   ];
@@ -216,8 +256,22 @@ export default function CustomerPortalLayout({
             </button>
           </div>
 
+          {/* New Parts Request CTA Button */}
+          <div className="px-3 pt-3.5 pb-2">
+            <Link
+              href="/portal/new-request"
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#ed2025] hover:bg-[#d3181d] text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-red-600/30 transition-all active:scale-[0.98] ${
+                sidebarCollapsed ? "px-0" : "px-3"
+              }`}
+              title={sidebarCollapsed ? "New Parts Request" : undefined}
+            >
+              <Plus className="w-4 h-4 stroke-[3] flex-shrink-0" />
+              {!sidebarCollapsed && <span className="truncate">NEW PARTS REQUEST</span>}
+            </Link>
+          </div>
+
           {/* Navigation Items by Group */}
-          <div className="px-3 py-2 space-y-6 flex-1">
+          <div className="px-3 py-2 space-y-5 flex-1">
             {navGroups.map((grp) => (
               <div key={grp.group} className="space-y-1">
                 {!sidebarCollapsed && (
@@ -236,11 +290,12 @@ export default function CustomerPortalLayout({
                           key={nav.label}
                           type="button"
                           onClick={() => setHelpModalOpen(true)}
-                          className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${sidebarCollapsed ? "justify-center" : ""
-                            } text-slate-400 hover:text-white hover:bg-slate-800/60`}
+                          className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                            sidebarCollapsed ? "justify-center" : ""
+                          } text-slate-400 hover:text-white hover:bg-slate-800/60`}
                         >
                           <div className="flex items-center gap-3">
-                            <Icon className="w-4 h-4 text-slate-400" />
+                            <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
                             {!sidebarCollapsed && <span>{nav.label}</span>}
                           </div>
                         </button>
@@ -251,24 +306,28 @@ export default function CustomerPortalLayout({
                       <Link
                         key={nav.label}
                         href={nav.href}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${sidebarCollapsed ? "justify-center" : ""
-                          } ${isActive
-                            ? "bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-[#ed2025] pl-2.5"
+                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                          sidebarCollapsed ? "justify-center" : ""
+                        } ${
+                          isActive
+                            ? "bg-slate-800/90 text-white font-bold shadow-sm relative before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1.5 before:bg-[#ed2025] before:rounded-r-full pl-3.5"
                             : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-                          }`}
+                        }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <Icon
-                            className={`w-4 h-4 transition ${isActive ? "text-[#ed2025]" : "text-slate-400"
-                              }`}
+                            className={`w-4 h-4 flex-shrink-0 transition ${
+                              isActive ? "text-[#ed2025]" : "text-slate-400"
+                            }`}
                           />
-                          {!sidebarCollapsed && <span>{nav.label}</span>}
+                          {!sidebarCollapsed && <span className="truncate">{nav.label}</span>}
                         </div>
 
                         {!sidebarCollapsed && nav.badge !== undefined && (
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${nav.badgeColor || "bg-slate-700"
-                              }`}
+                            className={`text-[10px] font-bold min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-white ${
+                              nav.badgeColor || "bg-slate-700"
+                            }`}
                           >
                             {nav.badge}
                           </span>

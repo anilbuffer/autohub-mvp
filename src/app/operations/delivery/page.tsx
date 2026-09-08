@@ -19,24 +19,30 @@ import {
 import {
   getStoredRequests,
   updateShipmentStage,
+  completePartRequest,
   subscribeToStore,
 } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
 
 export default function OperationsDeliveryConfirmationPage() {
   const [requests, setRequests] = useState<PartRequest[]>([]);
+  const [filterTab, setFilterTab] = useState<"active" | "delivered" | "all">("active");
   const [selectedReqId, setSelectedReqId] = useState<string>("");
   const [recipientName, setRecipientName] = useState("");
   const [podRef, setPodRef] = useState("");
   const [conditionChecked, setConditionChecked] = useState(true);
+  const [markAsCompleted, setMarkAsCompleted] = useState(true);
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [confirmedSuccess, setConfirmedSuccess] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
 
   const refresh = () => {
     const all = getStoredRequests();
     setRequests(all);
     if (!selectedReqId && all.length > 0) {
-      setSelectedReqId(all[0].id);
+      // Prefer an active in-transit or arrived request
+      const candidate = all.find(r => ["IN_TRANSIT", "ARRIVED_IN_NZ", "CUSTOMS_CLEARANCE", "DELIVERED"].includes(r.status)) || all[0];
+      setSelectedReqId(candidate.id);
     }
   };
 
@@ -46,24 +52,53 @@ export default function OperationsDeliveryConfirmationPage() {
     return unsub;
   }, []);
 
+  const logisticsRelevant = requests.filter((r) => {
+    if (filterTab === "active") {
+      return ["ORDERED_FROM_SUPPLIER", "SUPPLIER_DISPATCHED", "RECEIVED_AT_SHIPPING_FACILITY", "IN_TRANSIT", "CUSTOMS_CLEARANCE", "ARRIVED_IN_NZ"].includes(r.status);
+    }
+    if (filterTab === "delivered") {
+      return ["DELIVERED", "COMPLETED"].includes(r.status);
+    }
+    return true;
+  });
+
   const selectedRequest = requests.find((r) => r.id === selectedReqId);
 
   const handleConfirmDelivery = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReqId) return;
 
+    const carrier = selectedRequest?.shipment?.carrier || "Mainfreight Logistics NZ";
+    const tracking = podRef || selectedRequest?.shipment?.trackingNumber || "MFL-POD-NZ";
+    const signatory = recipientName || "Logistics Officer";
+    const notes = deliveryNotes || `Proof of Delivery: ${tracking}. Received and signed by ${signatory}. Condition inspected: ${conditionChecked ? "OK" : "Exceptions noted"}.`;
+
+    // 1. Update stage to DELIVERED
     updateShipmentStage(
       selectedReqId,
       "DELIVERED",
-      selectedRequest?.shipment?.carrier || "Mainfreight",
-      podRef || selectedRequest?.shipment?.trackingNumber || "MFL-POD",
-      "Auckland Logistics Depot / Customer Handover",
-      recipientName || "Logistics Officer",
-      deliveryNotes || `Proof of Delivery: ${podRef}. Signed by ${recipientName}.`
+      carrier,
+      tracking,
+      "Auckland Depot & Workshop Handover",
+      signatory,
+      notes
     );
 
+    // 2. If mark as completed checked, finalize lifecycle to COMPLETED
+    if (markAsCompleted) {
+      completePartRequest(
+        selectedReqId,
+        signatory,
+        "OPERATIONS",
+        `Consignment successfully handed over and signed off. ${notes}`
+      );
+      setActionMessage("Proof of Delivery recorded & Order successfully marked as COMPLETED!");
+    } else {
+      setActionMessage("Proof of Delivery recorded. Status updated to DELIVERED.");
+    }
+
     setConfirmedSuccess(true);
-    setTimeout(() => setConfirmedSuccess(false), 4000);
+    setTimeout(() => setConfirmedSuccess(false), 5000);
     setRecipientName("");
     setPodRef("");
     setDeliveryNotes("");
@@ -99,7 +134,7 @@ export default function OperationsDeliveryConfirmationPage() {
       {confirmedSuccess && (
         <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-900 font-semibold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <span>Proof of Delivery recorded. Order milestone updated to DELIVERED and customer notified.</span>
+          <span>{actionMessage || "Proof of Delivery recorded and status updated."}</span>
         </div>
       )}
 
@@ -107,13 +142,43 @@ export default function OperationsDeliveryConfirmationPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Pending Final Delivery */}
         <div className="lg:col-span-4 bg-white rounded-2xl sm:rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-4">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-3">
-            In-Transit Deliveries ({requests.length})
-          </h3>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Consignments ({logisticsRelevant.length})
+            </h3>
+          </div>
 
-          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-            {requests.map((r) => {
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl text-[11px] font-bold">
+            <button
+              onClick={() => setFilterTab("active")}
+              className={`flex-1 py-1.5 rounded-lg transition ${
+                filterTab === "active" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              In-Transit
+            </button>
+            <button
+              onClick={() => setFilterTab("delivered")}
+              className={`flex-1 py-1.5 rounded-lg transition ${
+                filterTab === "delivered" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Delivered
+            </button>
+            <button
+              onClick={() => setFilterTab("all")}
+              className={`flex-1 py-1.5 rounded-lg transition ${
+                filterTab === "all" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              All
+            </button>
+          </div>
+
+          <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
+            {logisticsRelevant.map((r) => {
               const isSelected = r.id === selectedReqId;
+              const isCompleted = r.status === "COMPLETED";
               const isDelivered = r.status === "DELIVERED";
 
               return (
@@ -130,7 +195,11 @@ export default function OperationsDeliveryConfirmationPage() {
                     <span className="font-mono text-xs font-bold text-slate-900">
                       {r.referenceNumber}
                     </span>
-                    {isDelivered ? (
+                    {isCompleted ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Completed
+                      </span>
+                    ) : isDelivered ? (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Delivered
                       </span>
@@ -172,13 +241,30 @@ export default function OperationsDeliveryConfirmationPage() {
                     </p>
                   </div>
 
-                  <div className="text-left sm:text-right">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
-                      Delivery Status
-                    </span>
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-800">
-                      {selectedRequest.status}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/portal/requests/${selectedRequest.id}`}
+                      target="_blank"
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <span>Customer Portal</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                    </Link>
+
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                        Status
+                      </span>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                        selectedRequest.status === "COMPLETED"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : selectedRequest.status === "DELIVERED"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-slate-100 text-slate-800"
+                      }`}>
+                        {selectedRequest.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -251,6 +337,19 @@ export default function OperationsDeliveryConfirmationPage() {
                     </label>
                   </div>
 
+                  <div className="flex items-center gap-2 bg-emerald-50/60 p-3 rounded-xl border border-emerald-200/60">
+                    <input
+                      type="checkbox"
+                      id="markCompletedBox"
+                      checked={markAsCompleted}
+                      onChange={(e) => setMarkAsCompleted(e.target.checked)}
+                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                    />
+                    <label htmlFor="markCompletedBox" className="text-xs text-emerald-900 font-bold cursor-pointer">
+                      Finalize &amp; Close Lifecycle as COMPLETED (Broadcast to Customer, Admin &amp; Finance)
+                    </label>
+                  </div>
+
                   <div>
                     <label className="font-bold text-slate-800 block mb-1">
                       Delivery Remarks &amp; Handover Location
@@ -267,7 +366,7 @@ export default function OperationsDeliveryConfirmationPage() {
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-slate-400 text-[11px]">
-                    Updates lifecycle state to DELIVERED
+                    Updates milestone and triggers real-time broadcast across all portals
                   </span>
 
                   <button
@@ -275,7 +374,7 @@ export default function OperationsDeliveryConfirmationPage() {
                     className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-lg shadow-emerald-950/20 flex items-center gap-2"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Confirm Delivery &amp; Close Consignment</span>
+                    <span>Confirm Delivery &amp; Finalize Consignment</span>
                   </button>
                 </div>
               </form>

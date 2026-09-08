@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import {
   getStoredRequests,
-  addFinancialTransaction,
+  processRefund,
   subscribeToStore,
 } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
@@ -42,25 +42,35 @@ export default function FinanceRefundsPage() {
 
   const [refunds, setRefunds] = useState<RefundRecord[]>([
     {
-      id: "REF-2026-001",
-      requestId: "REQ-002",
-      referenceNumber: "REQ-2026-0002",
-      customerName: "Auckland Euro Specialists",
-      amountNzd: 345.00,
-      reason: "Freight rate recalculation adjustment (Overcharged by carrier)",
+      id: "REF-2026-119",
+      requestId: "REQ-000119",
+      referenceNumber: "AH-P-000119",
+      customerName: "AutoCare Auckland",
+      amountNzd: 650.00,
+      reason: "Payment dispute remittance reconciliation & invoice credit adjustment",
       status: "PENDING_APPROVAL",
-      requestedDate: "2026-03-07",
+      requestedDate: "2026-09-06",
     },
     {
-      id: "REF-2026-002",
-      requestId: "REQ-003",
-      referenceNumber: "REQ-2026-0003",
-      customerName: "Waikato Commercial Fleets",
-      amountNzd: 890.00,
-      reason: "Japanese supplier price discount passed to client credit balance",
+      id: "REF-2026-140",
+      requestId: "REQ-000140",
+      referenceNumber: "AH-P-000140",
+      customerName: "AutoCare Auckland",
+      amountNzd: 185.00,
+      reason: "Freight rebate adjustment for combined terminal dispatch",
+      status: "PENDING_APPROVAL",
+      requestedDate: "2026-09-07",
+    },
+    {
+      id: "REF-2026-139",
+      requestId: "REQ-000139",
+      referenceNumber: "AH-P-000139",
+      customerName: "AutoCare Auckland",
+      amountNzd: 45.00,
+      reason: "Supplier trade promotional volume credit refund",
       status: "PROCESSED",
-      requestedDate: "2026-02-28",
-      approvedBy: "Head of Treasury (Marcus Vance)",
+      requestedDate: "2026-09-04",
+      approvedBy: "Clara Jenkins (Finance Desk)",
     },
   ]);
 
@@ -77,35 +87,33 @@ export default function FinanceRefundsPage() {
   }, []);
 
   const handleApprove = (refId: string) => {
+    const target = refunds.find((r) => r.id === refId);
+    if (!target) return;
+
+    // Call store helper to sync status and log ledger transaction
+    processRefund(
+      target.requestId,
+      target.amountNzd,
+      target.reason,
+      "Clara Jenkins (Finance Desk)",
+      "AWAITING_PAYMENT"
+    );
+
     setRefunds(
       refunds.map((r) => {
         if (r.id === refId) {
-          // Record ledger transaction
-          addFinancialTransaction({
-            type: "CREDIT_ADJUSTMENT",
-            referenceNumber: r.referenceNumber,
-            customerName: r.customerName,
-            customerNzbn: "9429038291024",
-            amountNzd: r.amountNzd,
-            paymentMethod: "CREDIT_ADJUSTMENT",
-            direction: "OUTFLOW",
-            officerName: "Finance Desk",
-            status: "SETTLED",
-            notes: `Credit Note / Refund ${r.id}: ${r.reason}`,
-          });
-
           return {
             ...r,
             status: "PROCESSED",
-            approvedBy: "Finance Desk",
+            approvedBy: "Clara Jenkins (Finance Desk)",
           };
         }
         return r;
       })
     );
 
-    setSuccessNotice(`Refund ${refId} approved. Reversal entry posted to Transaction Ledger.`);
-    setTimeout(() => setSuccessNotice(null), 4000);
+    setSuccessNotice(`Refund ${refId} for ${target.referenceNumber} approved. Reversal entry posted to Transaction Ledger & Order updated in real-time.`);
+    setTimeout(() => setSuccessNotice(null), 5000);
   };
 
   const filtered = refunds.filter((r) => {
@@ -259,7 +267,14 @@ export default function FinanceRefundsPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="font-bold text-slate-900">{r.customerName}</div>
-                    <div className="text-[11px] font-mono text-slate-500">{r.referenceNumber}</div>
+                    <Link
+                      href={`/portal/requests/${r.requestId}`}
+                      target="_blank"
+                      className="text-[11px] font-mono text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 mt-0.5"
+                    >
+                      <span>{r.referenceNumber}</span>
+                      <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                    </Link>
                   </td>
                   <td className="px-5 py-4 max-w-xs text-slate-600">
                     {r.reason}

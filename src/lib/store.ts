@@ -252,6 +252,30 @@ export function getActiveStaffMember(): string | null {
   return localStorage.getItem("autohub_procurly_active_staff_id_v2");
 }
 
+export function getActiveCustomerId(): string {
+  if (!isBrowser()) return "CUST-001";
+  try {
+    const raw = localStorage.getItem("autohub_procurly_active_customer_id_v2");
+    if (!raw) return "CUST-001";
+    return raw;
+  } catch {
+    return "CUST-001";
+  }
+}
+
+export function setActiveCustomerId(customerId: string) {
+  if (!isBrowser()) return;
+  localStorage.setItem("autohub_procurly_active_customer_id_v2", customerId);
+  notifyListeners();
+}
+
+export function getCurrentCustomer(): TradeCustomer {
+  const customers = getStoredCustomers();
+  const activeId = getActiveCustomerId();
+  const found = customers.find((c) => c.id === activeId);
+  return found || customers[0] || initialCustomers[0];
+}
+
 // Generate unique sequential reference number
 export function generateNextReference(): string {
   const requests = getStoredRequests();
@@ -682,6 +706,21 @@ export function confirmPayment(
 
   requests[index] = updated;
   saveRequests([...requests]);
+
+  // Log transaction in Finance General Ledger
+  addFinancialTransaction({
+    type: paymentMethod === "TRADE_CREDIT" ? "TRADE_CREDIT_UTILIZED" : "PAYMENT_RECEIVED",
+    referenceNumber: current.referenceNumber,
+    invoiceNumber: current.invoice.invoiceNumber,
+    customerName: current.customerName,
+    customerNzbn: current.customerNzbn,
+    amountNzd: current.invoice.totalNzd,
+    paymentMethod,
+    direction: "INFLOW",
+    officerName: actorName,
+    status: "SETTLED",
+    notes: notes || `Payment cleared via ${paymentMethod.replace(/_/g, " ")}. Receipt ${receiptNum}`,
+  });
 }
 
 // Mark ordered from supplier
@@ -1158,6 +1197,74 @@ export function confirmShipmentDelivery(
         previousState: current.status,
         newState: "DELIVERED",
         details: `Recipient: ${deliveryDetails.recipientName} | Docket: ${deliveryDetails.podDocket || "N/A"} | Location: ${current.deliveryAddress.city}`,
+      },
+      ...current.auditLogs,
+    ],
+  };
+
+  requests[index] = updated;
+  saveRequests([...requests]);
+}
+
+// Conclude full lifecycle: Mark request and order as COMPLETED
+export function completePartRequest(
+  requestId: string,
+  actorName: string,
+  actorRole: UserRole = "CUSTOMER",
+  notes?: string
+) {
+  const requests = getStoredRequests();
+  const index = requests.findIndex((r) => r.id === requestId);
+  if (index === -1) return;
+
+  const current = requests[index];
+  const now = new Date().toISOString();
+
+  const existingShipment = current.shipment;
+  const completedMilestone: LogisticsMilestone = {
+    id: `M-${Date.now()}`,
+    stage: "Completed & Signed Off",
+    status: "COMPLETED",
+    timestamp: now,
+    location: `${current.deliveryAddress.street}, ${current.deliveryAddress.city}`,
+    notes: notes || "Consignment inspected and full procurement lifecycle marked COMPLETED.",
+    carrierName: existingShipment?.carrier,
+    trackingReference: existingShipment?.trackingNumber,
+    completed: true,
+  };
+
+  const updated: PartRequest = {
+    ...current,
+    status: "COMPLETED",
+    updatedDate: now,
+    shipment: existingShipment
+      ? {
+          ...existingShipment,
+          milestones: [...existingShipment.milestones, completedMilestone],
+        }
+      : undefined,
+    messages: [
+      ...current.messages,
+      {
+        id: `MSG-${Date.now()}`,
+        senderId: actorRole === "CUSTOMER" ? current.customerId : "OPERATIONS-TEAM",
+        senderName: actorName,
+        senderRole: actorRole,
+        timestamp: now,
+        content: `Procurement order ${current.referenceNumber} has been officially signed off and COMPLETED. ${notes || "Thank you for using Procurly by Autohub."}`,
+        isInternalOnly: false,
+      },
+    ],
+    auditLogs: [
+      {
+        id: `AUD-${Date.now()}`,
+        timestamp: now,
+        actorName,
+        actorRole,
+        action: "Order Lifecycle Completed",
+        previousState: current.status,
+        newState: "COMPLETED",
+        details: notes || "Final sign-off complete. Order closed successfully.",
       },
       ...current.auditLogs,
     ],
@@ -2093,6 +2200,77 @@ export function updateCustomerCreditFacility(
       notes: `Credit facility limit adjusted from $${oldLimit.toLocaleString()} to $${newLimit.toLocaleString()} NZD (${updates.status || current.billingDetails.status})`,
     });
   }
+}
+
+// Process Refund / Credit Note and clear disputed or exception state
+export function processRefund(
+  requestId: string,
+  refundAmountNzd: number,
+  reason: string,
+  officerName: string,
+  resolutionStatus: RequestStatus = "AWAITING_PAYMENT"
+) {
+  const requests = getStoredRequests();
+  const index = requests.findIndex((r) => r.id === requestId);
+  const now = new Date().toISOString();
+
+  let refNum = `REF-${Date.now()}`;
+  let custName = "Customer Account";
+  let custNzbn = "9429038291024";
+
+  if (index !== -1) {
+    const current = requests[index];
+    refNum = current.referenceNumber;
+    custName = current.customerName;
+    custNzbn = current.customerNzbn;
+
+    const updated: PartRequest = {
+      ...current,
+      status: resolutionStatus,
+      updatedDate: now,
+      messages: [
+        ...current.messages,
+        {
+          id: `MSG-${Date.now()}`,
+          senderId: "FINANCE-TEAM",
+          senderName: officerName,
+          senderRole: "ADMIN",
+          timestamp: now,
+          content: `Credit Note / Refund approved for $${refundAmountNzd.toFixed(2)} NZD. ${reason}. Status reset to ${resolutionStatus.replace(/_/g, " ")}.`,
+          isInternalOnly: false,
+        },
+      ],
+      auditLogs: [
+        {
+          id: `AUD-${Date.now()}`,
+          timestamp: now,
+          actorName: officerName,
+          actorRole: "ADMIN",
+          action: "Refund / Credit Note Approved",
+          previousState: current.status,
+          newState: resolutionStatus,
+          details: `Approved refund of $${refundAmountNzd.toFixed(2)} NZD. Reason: ${reason}`,
+        },
+        ...current.auditLogs,
+      ],
+    };
+    requests[index] = updated;
+    saveRequests([...requests]);
+  }
+
+  // Log in finance ledger
+  addFinancialTransaction({
+    type: "CREDIT_ADJUSTMENT",
+    referenceNumber: refNum,
+    customerName: custName,
+    customerNzbn: custNzbn,
+    amountNzd: refundAmountNzd,
+    paymentMethod: "CREDIT_ADJUSTMENT",
+    direction: "OUTFLOW",
+    officerName,
+    status: "SETTLED",
+    notes: `Credit Note / Refund: ${reason}`,
+  });
 }
 
 // =========================================================================
