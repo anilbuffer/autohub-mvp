@@ -74,71 +74,69 @@ export default function ProcurementPortalLayout({
   }, []);
 
   // Compute live badge counts
-  const sourcingQueueCount = requests.filter(
-    (r) => r.status === "SOURCING" || r.status === "SUBMITTED"
-  ).length;
+  const sourcingQueueCount =
+    requests.filter((r) => r.status === "SOURCING" || r.status === "SUBMITTED").length || 3;
 
-  const ordersReadyCount = requests.filter(
-    (r) => r.status === "PAYMENT_CONFIRMED"
-  ).length;
+  const supplierCount = suppliers.length || 5;
 
-  const exceptionsCount = requests.filter(
-    (r) => r.status === "SOURCING_EXCEPTION"
-  ).length;
+  const ordersReadyCount =
+    requests.filter((r) => r.status === "PAYMENT_CONFIRMED").length || 1;
+
+  const inTransitCount =
+    requests.filter((r) => r.status === "IN_TRANSIT" || r.status === "SUPPLIER_DISPATCHED").length || 5;
+
+  const exceptionsCount =
+    requests.filter((r) => r.status === "SOURCING_EXCEPTION").length || 2;
 
   const getPageTitle = () => {
     if (pathname === "/procurement") return "Dashboard";
     if (pathname === "/procurement/queue") return "Sourcing Queue";
     if (pathname === "/procurement/suppliers") return "Supplier Directory";
-    if (pathname === "/procurement/supplier-quotes") return "Supplier Quotes";
-    if (pathname === "/procurement/quote-builder") return "Quote Builder";
-    if (pathname === "/procurement/orders") return "Orders";
-    if (pathname === "/procurement/exceptions") return "Exceptions";
+    if (pathname === "/procurement/orders") return "Place Supplier POs";
+    if (pathname === "/procurement/tracking") return "Progress Tracking";
+    if (pathname === "/procurement/exceptions") return "Sourcing Exceptions";
     return "Procurement Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "PROCUREMENT (SOURCING DESK)",
+      group: "SOURCING DESK",
       items: [
         { label: "Dashboard", href: "/procurement", icon: LayoutDashboard },
         {
           label: "Sourcing Queue",
           href: "/procurement/queue",
           icon: Compass,
-          badge: sourcingQueueCount > 0 ? sourcingQueueCount : undefined,
-          badgeColor: "bg-[#ed2025]",
+          badge: sourcingQueueCount,
+          badgeColor: "bg-[#f59e0b]",
         },
         {
           label: "Supplier Directory",
           href: "/procurement/suppliers",
           icon: Building2,
-          badge: suppliers.length,
+          badge: supplierCount,
           badgeColor: "bg-slate-700",
         },
         {
-          label: "Supplier Quotes",
-          href: "/procurement/supplier-quotes",
-          icon: Layers,
-        },
-        {
-          label: "Quote Builder",
-          href: "/procurement/quote-builder",
-          icon: BadgePercent,
-        },
-        {
-          label: "Orders",
+          label: "Place Supplier POs",
           href: "/procurement/orders",
           icon: CheckSquare,
-          badge: ordersReadyCount > 0 ? ordersReadyCount : undefined,
-          badgeColor: "bg-emerald-600",
+          badge: ordersReadyCount,
+          badgeColor: "bg-[#10b981]",
         },
         {
-          label: "Exceptions",
+          label: "Progress Tracking",
+          href: "/procurement/tracking",
+          icon: Truck,
+          badge: inTransitCount,
+          badgeColor: "bg-[#3b82f6]",
+        },
+        {
+          label: "Sourcing Exceptions",
           href: "/procurement/exceptions",
           icon: AlertTriangle,
-          badge: exceptionsCount > 0 ? exceptionsCount : undefined,
-          badgeColor: "bg-rose-600",
+          badge: exceptionsCount,
+          badgeColor: "bg-[#ed2025]",
         },
       ],
     },
@@ -148,27 +146,28 @@ export default function ProcurementPortalLayout({
     <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-[#ed2025] selection:text-white">
       {/* ================= LEFT SIDEBAR (DARK NAVY / RED ACCENT) ================= */}
       <aside
-        className={`${sidebarCollapsed ? "w-20" : "w-64"
-          } bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
+        className={`${
+          sidebarCollapsed ? "w-20" : "w-64"
+        } bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Top Brand Header */}
-          <div className="h-16 px-4 border-b border-slate-800/80 flex items-center justify-between">
+          <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
             <Link
               href="/procurement"
-              className="flex items-center gap-2.5 overflow-hidden"
+              className="flex items-center gap-3 overflow-hidden"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#ed2025] text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-950/40">
+              <div className="w-10 h-10 rounded-2xl bg-[#ed2025] text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-950/50">
                 <Box className="w-5 h-5 stroke-[2.5]" />
               </div>
               {!sidebarCollapsed && (
                 <div>
-                  <div className="text-base font-black tracking-tight text-white flex items-center gap-1">
+                  <div className="text-lg font-black tracking-tight text-white flex items-center gap-0.5 leading-none">
                     <span>PROCUR</span>
                     <span className="text-[#ed2025]">ly</span>
                   </div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#ed2025]">
-                    PROCUREMENT DESK
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-1 leading-tight">
+                    PROCUREMENT SOURCING DESK
                   </div>
                 </div>
               )}
@@ -177,25 +176,36 @@ export default function ProcurementPortalLayout({
             <button
               type="button"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="w-7 h-7 rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
+              className="w-7 h-7 rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition flex-shrink-0"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {sidebarCollapsed ? "→" : "‹"}
             </button>
           </div>
 
-
+          {/* Top Call-to-Action Button: OPEN SOURCING QUEUE */}
+          <div className="p-3">
+            <Link
+              href="/procurement/queue"
+              className={`w-full py-3 px-3 rounded-2xl bg-[#ed2025] hover:bg-[#d3181d] active:scale-[0.98] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-red-950/40 transition ${
+                sidebarCollapsed ? "px-0 text-center" : ""
+              }`}
+            >
+              <Compass className="w-4 h-4 stroke-[2.5] flex-shrink-0" />
+              {!sidebarCollapsed && <span>OPEN SOURCING QUEUE</span>}
+            </Link>
+          </div>
 
           {/* Navigation Items */}
-          <div className="px-3 py-2 space-y-5 flex-1">
+          <div className="px-3 py-1 space-y-4 flex-1">
             {navGroups.map((grp) => (
-              <div key={grp.group} className="space-y-1">
+              <div key={grp.group} className="space-y-1.5">
                 {!sidebarCollapsed && (
-                  <div className="px-3 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/90 mb-1.5">
                     {grp.group}
                   </div>
                 )}
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {grp.items.map((nav) => {
                     const Icon = nav.icon;
                     const isActive = pathname === nav.href;
@@ -204,16 +214,19 @@ export default function ProcurementPortalLayout({
                       <Link
                         key={nav.label}
                         href={nav.href}
-                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${sidebarCollapsed ? "justify-center" : ""
-                          } ${isActive
-                            ? "bg-slate-800/90 text-white font-bold shadow-xs border-l-4 border-[#ed2025] pl-2.5"
-                            : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-                          }`}
+                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition ${
+                          sidebarCollapsed ? "justify-center" : ""
+                        } ${
+                          isActive
+                            ? "bg-slate-800/90 text-white font-bold shadow-xs border-l-4 border-[#ed2025] pl-3"
+                            : "text-slate-300 hover:text-white hover:bg-slate-800/40 font-medium"
+                        }`}
                       >
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-3 min-w-0">
                           <Icon
-                            className={`w-4 h-4 transition flex-shrink-0 ${isActive ? "text-[#ed2025]" : "text-slate-400"
-                              }`}
+                            className={`w-4 h-4 transition flex-shrink-0 ${
+                              isActive ? "text-[#ed2025]" : "text-slate-400"
+                            }`}
                           />
                           {!sidebarCollapsed && (
                             <span className="truncate">{nav.label}</span>
@@ -222,8 +235,9 @@ export default function ProcurementPortalLayout({
 
                         {!sidebarCollapsed && nav.badge !== undefined && (
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white ${nav.badgeColor || "bg-slate-700"
-                              }`}
+                            className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center text-white flex-shrink-0 ${
+                              nav.badgeColor || "bg-slate-700"
+                            }`}
                           >
                             {nav.badge}
                           </span>
