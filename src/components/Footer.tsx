@@ -25,7 +25,10 @@ export const Footer: React.FC = () => {
   const isPortal =
     pathname === "/login" ||
     pathname?.startsWith("/portal") ||
-    pathname?.startsWith("/admin");
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/procurement") ||
+    pathname?.startsWith("/operations") ||
+    pathname?.startsWith("/finance");
 
   if (isPortal) {
     return null;
@@ -207,23 +210,38 @@ export const Footer: React.FC = () => {
           {/* Column 3: Portals & Workflows (lg:col-span-2) */}
           <div className="lg:col-span-2 space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-              PORTALS &amp; WORKFLOWS
+              PHASE 1 PORTALS
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
               <li>
-                <Link href="/portal" className="hover:text-white transition">Trade Customer Portal</Link>
+                <Link href="/admin" className="hover:text-white transition flex items-center justify-between">
+                  <span>Admin Portal</span>
+                  <span className="text-[10px] text-red-400 font-mono">/admin</span>
+                </Link>
               </li>
               <li>
-                <Link href="/portal/new-request" className="hover:text-white transition">New Parts Request</Link>
+                <Link href="/portal" className="hover:text-white transition flex items-center justify-between">
+                  <span>Customer Portal</span>
+                  <span className="text-[10px] text-blue-400 font-mono">/portal</span>
+                </Link>
               </li>
               <li>
-                <Link href="/portal/quotes" className="hover:text-white transition">Customer Quotes</Link>
+                <Link href="/procurement" className="hover:text-white transition flex items-center justify-between">
+                  <span>Procurement Portal</span>
+                  <span className="text-[10px] text-amber-400 font-mono">/procurement</span>
+                </Link>
               </li>
               <li>
-                <Link href="/portal/shipments" className="hover:text-white transition">Consignment Tracker</Link>
+                <Link href="/operations" className="hover:text-white transition flex items-center justify-between">
+                  <span>Operations Portal</span>
+                  <span className="text-[10px] text-cyan-400 font-mono">/operations</span>
+                </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-white transition">Administration Portal</Link>
+                <Link href="/finance" className="hover:text-white transition flex items-center justify-between">
+                  <span>Finance Portal</span>
+                  <span className="text-[10px] text-emerald-400 font-mono">/finance</span>
+                </Link>
               </li>
             </ul>
           </div>

@@ -1,0 +1,368 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Compass,
+  Building2,
+  CheckSquare,
+  Truck,
+  AlertTriangle,
+  Search,
+  Plus,
+  ChevronDown,
+  LogOut,
+  Bell,
+  Home,
+  Shield,
+  LucideIcon,
+  Layers,
+  Sparkles,
+} from "lucide-react";
+import {
+  getStoredRequests,
+  getStoredSuppliers,
+  getStoredNotifications,
+  subscribeToStore,
+} from "@/lib/store";
+import { PartRequest, SupplierProfile, CustomerNotification } from "@/lib/types";
+import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  badge?: number | string;
+  badgeColor?: string;
+}
+
+interface NavGroup {
+  group: string;
+  items: NavItem[];
+}
+
+export default function ProcurementPortalLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const [requests, setRequests] = useState<PartRequest[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierProfile[]>([]);
+  const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const refresh = () => {
+    setRequests(getStoredRequests());
+    setSuppliers(getStoredSuppliers());
+    setNotifications(getStoredNotifications());
+  };
+
+  useEffect(() => {
+    refresh();
+    const unsub = subscribeToStore(() => refresh());
+    return unsub;
+  }, []);
+
+  // Compute live badge counts
+  const sourcingQueueCount = requests.filter(
+    (r) => r.status === "SOURCING" || r.status === "SUBMITTED"
+  ).length;
+
+  const ordersReadyCount = requests.filter(
+    (r) => r.status === "PAYMENT_CONFIRMED"
+  ).length;
+
+  const exceptionsCount = requests.filter(
+    (r) => r.status === "SOURCING_EXCEPTION"
+  ).length;
+
+  const getPageTitle = () => {
+    if (pathname === "/procurement") return "Sourcing Desk Console";
+    if (pathname === "/procurement/queue") return "Sourcing Intake & Quotes";
+    if (pathname === "/procurement/orders") return "Place Supplier Purchase Orders";
+    if (pathname === "/procurement/suppliers") return "Overseas Supplier Directory";
+    if (pathname === "/procurement/exceptions") return "Sourcing Exceptions & Advisories";
+    return "Procurement Portal";
+  };
+
+  const navGroups: NavGroup[] = [
+    {
+      group: "SOURCING DESK",
+      items: [
+        { label: "Dashboard", href: "/procurement", icon: LayoutDashboard },
+        {
+          label: "Sourcing Queue",
+          href: "/procurement/queue",
+          icon: Compass,
+          badge: sourcingQueueCount > 0 ? sourcingQueueCount : undefined,
+          badgeColor: "bg-amber-500",
+        },
+        {
+          label: "Supplier Purchase Orders",
+          href: "/procurement/orders",
+          icon: CheckSquare,
+          badge: ordersReadyCount > 0 ? ordersReadyCount : undefined,
+          badgeColor: "bg-emerald-600",
+        },
+        {
+          label: "Supplier Directory",
+          href: "/procurement/suppliers",
+          icon: Building2,
+          badge: suppliers.length,
+          badgeColor: "bg-slate-700",
+        },
+        {
+          label: "Sourcing Exceptions",
+          href: "/procurement/exceptions",
+          icon: AlertTriangle,
+          badge: exceptionsCount > 0 ? exceptionsCount : undefined,
+          badgeColor: "bg-rose-600",
+        },
+      ],
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] flex flex-row font-sans text-slate-900 antialiased selection:bg-amber-500 selection:text-white">
+      {/* ================= LEFT SIDEBAR (DARK NAVY / AMBER ACCENT) ================= */}
+      <aside
+        className={`${
+          sidebarCollapsed ? "w-20" : "w-72"
+        } bg-[#09101d] text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/90 z-30 sticky top-0 h-screen`}
+      >
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          {/* Top Brand Header */}
+          <div className="h-16 px-4 border-b border-slate-800/80 flex items-center justify-between">
+            <Link
+              href="/procurement"
+              className="flex items-center gap-2.5 overflow-hidden"
+            >
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center flex-shrink-0">
+                <Compass className="w-4 h-4" />
+              </div>
+              {!sidebarCollapsed && (
+                <div>
+                  <div className="text-sm font-black tracking-tight text-white flex items-center gap-1">
+                    <span>PROCUR</span>
+                    <span className="text-amber-400">ly</span>
+                  </div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-amber-400/90">
+                    PROCUREMENT DESK
+                  </div>
+                </div>
+              )}
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="w-7 h-7 rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? "→" : "‹"}
+            </button>
+          </div>
+
+          {/* Quick Action Button */}
+          <div className="p-3 sm:p-4">
+            <Link
+              href="/procurement/queue"
+              className={`w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 font-bold text-xs shadow-lg shadow-amber-950/40 transition flex items-center justify-center gap-2 ${
+                sidebarCollapsed ? "px-2" : "px-4"
+              }`}
+            >
+              <Plus className="w-4 h-4 flex-shrink-0 stroke-[2.5]" />
+              {!sidebarCollapsed && <span>CAPTURE SUPPLIER QUOTE</span>}
+            </Link>
+          </div>
+
+          {/* Navigation Items */}
+          <div className="px-3 py-2 space-y-5 flex-1">
+            {navGroups.map((grp) => (
+              <div key={grp.group} className="space-y-1">
+                {!sidebarCollapsed && (
+                  <div className="px-3 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    {grp.group}
+                  </div>
+                )}
+                <div className="space-y-0.5">
+                  {grp.items.map((nav) => {
+                    const Icon = nav.icon;
+                    const isActive = pathname === nav.href;
+
+                    return (
+                      <Link
+                        key={nav.label}
+                        href={nav.href}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                          sidebarCollapsed ? "justify-center" : ""
+                        } ${
+                          isActive
+                            ? "bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-amber-400 pl-2.5"
+                            : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Icon
+                            className={`w-4 h-4 transition flex-shrink-0 ${
+                              isActive ? "text-amber-400" : "text-slate-400"
+                            }`}
+                          />
+                          {!sidebarCollapsed && (
+                            <span className="truncate">{nav.label}</span>
+                          )}
+                        </div>
+
+                        {!sidebarCollapsed && nav.badge !== undefined && (
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full text-white ${
+                              nav.badgeColor || "bg-slate-700"
+                            }`}
+                          >
+                            {nav.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom User Profile Section */}
+        <div className="p-3 sm:p-4 border-t border-slate-800/80 relative">
+          <div
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-slate-800/60 transition group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs ring-1 ring-amber-500/30 flex-shrink-0">
+                NC
+              </div>
+              {!sidebarCollapsed && (
+                <div className="truncate">
+                  <div className="text-xs font-bold text-white truncate">
+                    Nathan Cole
+                  </div>
+                  <div className="text-[10px] text-amber-400 truncate">
+                    Nagoya/Tokyo Desk
+                  </div>
+                </div>
+              )}
+            </div>
+            {!sidebarCollapsed && (
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-500 transition-transform ${
+                  userMenuOpen ? "rotate-180" : ""
+                }`}
+              />
+            )}
+          </div>
+
+          {userMenuOpen && (
+            <div className="absolute bottom-16 left-3 right-3 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 text-xs">
+              <div className="px-3 py-2 border-b border-slate-800">
+                <div className="font-bold text-white">Nathan Cole</div>
+                <div className="text-[11px] text-slate-400">
+                  nathan.cole@autohub.co.nz
+                </div>
+                <span className="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                  SOURCING SPECIALIST
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition mt-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* ================= RIGHT MAIN LAYOUT ================= */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        {/* Top Header Bar */}
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-200/90 min-h-[64px] py-2.5 px-4 sm:px-8 flex items-center justify-between gap-4">
+          {/* Breadcrumb & Title */}
+          <div className="flex flex-col justify-center min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-0.5 leading-none">
+              <Link
+                href="/"
+                className="hover:text-slate-900 transition flex items-center gap-1 text-slate-500"
+              >
+                <span>Home</span>
+              </Link>
+              <span className="text-slate-400">/</span>
+              <Link
+                href="/procurement"
+                className="hover:text-slate-900 transition text-slate-600 font-medium"
+              >
+                Procurement
+              </Link>
+              <span className="text-slate-400">/</span>
+              <span className="text-amber-600 font-semibold truncate">
+                {getPageTitle()}
+              </span>
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-tight truncate">
+              {getPageTitle()}
+            </h1>
+          </div>
+
+          {/* Right: Search, Portal Switcher, Direct Actions */}
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+            {/* Global Search Bar */}
+            <button
+              type="button"
+              onClick={() => setSearchModalOpen(true)}
+              className="flex items-center justify-between w-52 sm:w-64 lg:w-72 px-3.5 py-2 rounded-xl bg-slate-50/80 hover:bg-slate-100/90 border border-slate-200 text-left transition group shadow-2xs"
+            >
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-600 flex-shrink-0" />
+                <span className="text-xs text-slate-400 truncate font-normal">
+                  Search requests, suppliers...
+                </span>
+              </div>
+              <kbd className="flex-shrink-0 px-1.5 py-0.5 rounded bg-white text-[10px] font-mono font-bold text-slate-400 border border-slate-200 shadow-2xs ml-2">
+                ⌘K
+              </kbd>
+            </button>
+
+            {/* Portal Switcher */}
+            <PortalNavSwitcher currentPortal="procurement" variant="light" />
+
+            <Link
+              href="/procurement/queue"
+              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span className="hidden sm:inline">Add Quote</span>
+            </Link>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-[#f8fafc]">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

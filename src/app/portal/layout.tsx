@@ -35,6 +35,7 @@ import {
   subscribeToStore,
 } from "@/lib/store";
 import { TradeCustomer, PartRequest, CustomerNotification } from "@/lib/types";
+import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
 
 interface NavItem {
   label: string;
@@ -426,6 +427,9 @@ export default function CustomerPortalLayout({
                 </kbd>
               </button>
             </div>
+            {/* Portal Switcher */}
+            <PortalNavSwitcher currentPortal="customer" variant="light" />
+
             {/* Primary CTA: + New Request */}
             <Link
               id="header-new-request-button"

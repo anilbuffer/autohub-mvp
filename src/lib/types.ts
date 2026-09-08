@@ -145,6 +145,12 @@ export interface LogisticsMilestone {
   completed: boolean;
 }
 
+export interface TimelineEvent {
+  status: string;
+  timestamp: string;
+  description: string;
+}
+
 export interface ShipmentDetails {
   id: string;
   carrier: string;
@@ -265,7 +271,9 @@ export interface PartRequest {
   supplierQuotes: SupplierQuotation[];
   quote?: CustomerQuote;
   shipment?: ShipmentDetails;
+  timeline?: TimelineEvent[];
   invoice?: TaxInvoice;
+  paymentStatus?: PaymentStatus;
   messages: MessageItem[];
   auditLogs: AuditLogEntry[];
 }

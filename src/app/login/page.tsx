@@ -59,20 +59,20 @@ export default function LoginPage() {
     {
       role: "ADMIN" as UserRole,
       title: "Autohub Admin",
-      subtitle: "Unified Operations Desk",
-      persona: "David Vance",
-      staffId: "STF-001",
-      org: "Autohub Central Operations",
+      subtitle: "Governance & Operations",
+      persona: "Sarah Jenkins",
+      staffId: "STAFF-00",
+      org: "Autohub Systems Administration",
       email: "admin@autohub.co.nz",
-      badge: "UNIFIED ADMIN OPERATIONS",
+      badge: "SYSTEM ADMINISTRATION",
       icon: Shield,
       path: "/admin",
       accent: "text-red-400 bg-red-500/10 border-red-500/40",
       description: "End-to-end administration: part intake, supplier quote capture, landed customer quotes, freight tariffs, procurement POs, shipment tracking, payment verification, and system settings.",
       quickLinks: [
         { label: "Dashboard", href: "/admin" },
-        { label: "Part Requests", href: "/admin/requests" },
-        { label: "Procurement", href: "/admin/procurement" },
+        { label: "Customer Accounts", href: "/admin/customers" },
+        { label: "Audit Trail", href: "/admin/audit" },
       ],
     },
     {
@@ -80,6 +80,7 @@ export default function LoginPage() {
       title: "Trade Customer",
       subtitle: "Self-Service Portal",
       persona: "James Wilson",
+      staffId: "STAFF-04",
       org: "AutoCare Auckland",
       email: "james@autocareauckland.co.nz",
       badge: "TRADE DEALERSHIP / REPAIRER",
@@ -90,6 +91,64 @@ export default function LoginPage() {
       quickLinks: [
         { label: "Trade Portal", href: "/portal" },
         { label: "New Request", href: "/portal/new-request" },
+        { label: "Invoices", href: "/portal/payments" },
+      ],
+    },
+    {
+      role: "PROCUREMENT" as UserRole,
+      title: "Procurement Portal",
+      subtitle: "Global Sourcing Desk",
+      persona: "Nathan Cole",
+      staffId: "STAFF-01",
+      org: "Nagoya & Tokyo Sourcing Desk",
+      email: "nathan.cole@autohub.co.nz",
+      badge: "SOURCING SPECIALIST",
+      icon: Compass,
+      path: "/procurement",
+      accent: "text-amber-400 bg-amber-500/10 border-amber-500/40",
+      description: "Sourcing console: triage RFQs, capture overseas supplier quotes (Japan, Germany, USA, Australia with foreign FX to NZD), place supplier purchase orders, and manage suppliers.",
+      quickLinks: [
+        { label: "Sourcing Console", href: "/procurement" },
+        { label: "Sourcing Queue", href: "/procurement/queue" },
+        { label: "Supplier POs", href: "/procurement/orders" },
+      ],
+    },
+    {
+      role: "OPERATIONS" as UserRole,
+      title: "Operations Portal",
+      subtitle: "Freight & Port Logistics",
+      persona: "Liam Patel",
+      staffId: "STAFF-02",
+      org: "International Freight & Port Logistics",
+      email: "liam.patel@autohub.co.nz",
+      badge: "LOGISTICS COORDINATOR",
+      icon: Truck,
+      path: "/operations",
+      accent: "text-cyan-400 bg-cyan-500/10 border-cyan-500/40",
+      description: "Logistics command: configure Air Express & Sea Freight tariffs, update 6-stage shipment tracking milestones, monitor MPI biosecurity and New Zealand Customs clearance.",
+      quickLinks: [
+        { label: "Logistics Desk", href: "/operations" },
+        { label: "Tracking Milestones", href: "/operations/shipments" },
+        { label: "Freight Tariffs", href: "/operations/freight" },
+      ],
+    },
+    {
+      role: "FINANCE" as UserRole,
+      title: "Finance Portal",
+      subtitle: "Billing & Treasury Desk",
+      persona: "Clara Jenkins",
+      staffId: "STAFF-03",
+      org: "Finance & Credit Governance",
+      email: "clara.jenkins@autohub.co.nz",
+      badge: "FINANCE OFFICER",
+      icon: Banknote,
+      path: "/finance",
+      accent: "text-emerald-400 bg-emerald-500/10 border-emerald-500/40",
+      description: "Financial management: verify direct bank remittances (ANZ reference matching), issue official receipts, approve trade credit facility limits ($10k-$50k Net 20th Month), and generate Tax Invoices.",
+      quickLinks: [
+        { label: "Finance Console", href: "/finance" },
+        { label: "Payments Queue", href: "/finance/payments" },
+        { label: "Trade Credit Accounts", href: "/finance/credit" },
       ],
     },
   ];
@@ -235,8 +294,8 @@ export default function LoginPage() {
             </span>
           </div>
 
-          {/* 2 MVP Workspace Role Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* 5 MVP Workspace Role Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {rolesConfig.map((item) => {
               const Icon = item.icon;
               const isSelected = selectedRole === item.role;

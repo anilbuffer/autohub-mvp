@@ -44,6 +44,7 @@ import {
   NotificationTemplate,
   AuditLogEntry,
 } from "@/lib/types";
+import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
 
 interface NavItem {
   label: string;
@@ -647,6 +648,9 @@ export default function AdministratorLayout({
                 </div>
               )}
             </div>
+
+            {/* Portal Switcher */}
+            <PortalNavSwitcher currentPortal="admin" variant="light" />
 
             {/* Notification Bell */}
             <div className="relative">

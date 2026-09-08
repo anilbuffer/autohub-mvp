@@ -83,7 +83,7 @@ export const PORTALS: PortalOption[] = [
 ];
 
 interface PortalNavSwitcherProps {
-  currentPortal?: "admin" | "customer" | "procurement" | "operations" | "finance";
+  currentPortal?: string;
   variant?: "dark" | "light";
 }
 
@@ -97,8 +97,9 @@ export const PortalNavSwitcher: React.FC<PortalNavSwitcherProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto detect current portal if not passed explicitly
+  const normalizedProp = currentPortal?.toLowerCase();
   const activePortalId =
-    currentPortal ||
+    normalizedProp ||
     (pathname?.startsWith("/admin")
       ? "admin"
       : pathname?.startsWith("/procurement")
@@ -255,3 +256,5 @@ export const PortalNavSwitcher: React.FC<PortalNavSwitcherProps> = ({
     </div>
   );
 };
+
+export default PortalNavSwitcher;
