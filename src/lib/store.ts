@@ -1889,10 +1889,10 @@ export function updatePaymentStatus(
   requestId: string,
   newStatus: PaymentStatus,
   reason: string,
-  officerName: string
+  officerName: string = "Clara Jenkins"
 ) {
   const requests = getStoredRequests();
-  const index = requests.findIndex((r) => r.id === requestId);
+  const index = requests.findIndex((r) => r.id === requestId || r.referenceNumber === requestId);
   if (index === -1) return;
 
   const current = requests[index];
@@ -1902,6 +1902,8 @@ export function updatePaymentStatus(
   if (newStatus === "PAID") reqStatus = "PAYMENT_CONFIRMED";
   if (newStatus === "PENDING") reqStatus = "AWAITING_PAYMENT";
   if (newStatus === "DISPUTED") reqStatus = "PAYMENT_DISPUTED";
+
+  const totalAmount = current.invoice?.totalNzd || current.quote?.totalNzd || 0;
 
   const updatedInvoice: TaxInvoice = current.invoice
     ? {
@@ -1920,10 +1922,10 @@ export function updatePaymentStatus(
         billingAddress: `${current.deliveryAddress.street}, ${current.deliveryAddress.city}`,
         paymentMethod: "BANK_TRANSFER",
         paymentReference: current.referenceNumber,
-        subtotalNzd: 400.0,
+        subtotalNzd: totalAmount > 0 ? totalAmount / 1.15 : 0,
         gstRate: 0.15,
-        gstAmountNzd: 60.0,
-        totalNzd: 460.0,
+        gstAmountNzd: totalAmount > 0 ? totalAmount - totalAmount / 1.15 : 0,
+        totalNzd: totalAmount,
         status: newStatus,
         statusNotes: reason,
       };
@@ -1931,16 +1933,29 @@ export function updatePaymentStatus(
   const updated: PartRequest = {
     ...current,
     status: reqStatus,
+    paymentStatus: newStatus,
     invoice: updatedInvoice,
     updatedDate: now,
+    messages: [
+      ...current.messages,
+      {
+        id: `MSG-${Date.now()}`,
+        senderId: "FINANCE-DESK",
+        senderName: officerName,
+        senderRole: "FINANCE",
+        timestamp: now,
+        content: `Payment status updated to ${newStatus.replace(/_/g, " ")}. Audit remark: ${reason}`,
+        isInternalOnly: false,
+      },
+    ],
     auditLogs: [
       {
         id: `AUD-${Date.now()}`,
         timestamp: now,
         actorName: officerName,
-        actorRole: "ADMIN",
-        action: `Payment Status Changed to ${newStatus}`,
-        previousState: current.invoice?.status || "UNKNOWN",
+        actorRole: "FINANCE",
+        action: `Payment Status Transition Desk: ${newStatus}`,
+        previousState: current.paymentStatus || current.invoice?.status || "PENDING",
         newState: newStatus,
         details: reason,
       },
@@ -1950,6 +1965,22 @@ export function updatePaymentStatus(
 
   requests[index] = updated;
   saveRequests([...requests]);
+
+  if (newStatus === "PAID") {
+    addFinancialTransaction({
+      type: "PAYMENT_RECEIVED",
+      referenceNumber: current.referenceNumber,
+      invoiceNumber: updatedInvoice.invoiceNumber,
+      customerName: current.customerName,
+      customerNzbn: current.customerNzbn,
+      amountNzd: totalAmount,
+      paymentMethod: updatedInvoice.paymentMethod || "BANK_TRANSFER",
+      direction: "INFLOW",
+      officerName,
+      status: "SETTLED",
+      notes: `Status Transition Desk -> PAID. Remark: ${reason}`,
+    });
+  }
 }
 
 // Validate trade credit and release order
