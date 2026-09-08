@@ -31,6 +31,7 @@ import {
 } from "@/lib/store";
 import { PartRequest, SupplierProfile, CustomerNotification } from "@/lib/types";
 import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
+import { SidebarUserProfile } from "@/components/SidebarUserProfile";
 
 interface NavItem {
   label: string;
@@ -57,7 +58,6 @@ export default function ProcurementPortalLayout({
   const [suppliers, setSuppliers] = useState<SupplierProfile[]>([]);
   const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -237,60 +237,11 @@ export default function ProcurementPortalLayout({
           </div>
         </div>
 
-        {/* Bottom User Profile Section */}
-        <div className="p-3 sm:p-4 border-t border-slate-800/80 relative">
-          <div
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center justify-between cursor-pointer p-2 rounded-xl hover:bg-slate-800/60 transition group"
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-[#ed2025]/20 text-[#ed2025] flex items-center justify-center font-bold text-xs ring-1 ring-[#ed2025]/30 flex-shrink-0">
-                NC
-              </div>
-              {!sidebarCollapsed && (
-                <div className="truncate">
-                  <div className="text-xs font-bold text-white truncate">
-                    Nathan Cole
-                  </div>
-                  <div className="text-[10px] text-slate-400 truncate">
-                    Nagoya / Tokyo Desk
-                  </div>
-                </div>
-              )}
-            </div>
-            {!sidebarCollapsed && (
-              <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-500 transition-transform ${userMenuOpen ? "rotate-180" : ""
-                  }`}
-              />
-            )}
-          </div>
-
-          {userMenuOpen && (
-            <div className="absolute bottom-16 left-3 right-3 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 text-xs">
-              <div className="px-3 py-2 border-b border-slate-800">
-                <div className="font-bold text-white">Nathan Cole</div>
-                <div className="text-[11px] text-slate-400">
-                  nathan.cole@autohub.co.nz
-                </div>
-                <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#ed2025]/10 text-[#ed2025] border border-[#ed2025]/20">
-                  SOURCING SPECIALIST
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setUserMenuOpen(false);
-                  router.push("/login");
-                }}
-                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition mt-1 font-semibold"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Bottom User Profile Section with Role Switcher */}
+        <SidebarUserProfile
+          currentPortal="procurement"
+          sidebarCollapsed={sidebarCollapsed}
+        />
       </aside>
 
       {/* ================= RIGHT MAIN LAYOUT ================= */}

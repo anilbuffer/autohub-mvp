@@ -38,6 +38,7 @@ import {
 } from "@/lib/store";
 import { TradeCustomer, PartRequest, CustomerNotification } from "@/lib/types";
 import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
+import { SidebarUserProfile } from "@/components/SidebarUserProfile";
 
 interface NavItem {
   label: string;
@@ -65,7 +66,6 @@ export default function CustomerPortalLayout({
   const [requests, setRequests] = useState<PartRequest[]>([]);
   const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,7 +95,6 @@ export default function CustomerPortalLayout({
       }
       if (e.key === "Escape") {
         setSearchModalOpen(false);
-        setUserMenuOpen(false);
         setNotifDropdownOpen(false);
         setHelpModalOpen(false);
       }
@@ -283,86 +282,19 @@ export default function CustomerPortalLayout({
           </div>
         </div>
 
-        {/* Bottom User Profile Section */}
-        <div className="p-3 sm:p-4 border-t border-slate-800/80 relative">
-          <div
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-800/60 cursor-pointer transition"
-          >
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              {/* Blue Avatar JW */}
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
-                JW
-              </div>
-              {!sidebarCollapsed && (
-                <div className="overflow-hidden">
-                  <div className="text-xs font-bold text-white truncate leading-tight">
-                    James Wilson
-                  </div>
-                  <div className="text-[10px] text-slate-400 truncate">
-                    Customer
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {!sidebarCollapsed && (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-            )}
-          </div>
-
-          {/* User Popover Menu */}
-          {userMenuOpen && (
-            <div className="absolute bottom-16 left-3 right-3 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl space-y-1 text-xs text-slate-300 z-50 animate-scaleIn">
-              <div className="px-3 py-2 border-b border-slate-800 text-[11px]">
-                <div className="font-bold text-white">AutoCare Auckland</div>
-                <div className="text-slate-400 font-mono text-[10px]">NZBN: 9429041234567</div>
-              </div>
-
-              <Link
-                href="/portal/settings"
-                onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition"
-              >
-                <Settings className="w-3.5 h-3.5" />
-                <span>Account Settings & Users</span>
-              </Link>
-
-              <div className="border-t border-slate-800/80 pt-1 mt-1">
-                <Link
-                  href="/admin"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#ed2025]" />
-                  <span>Admin Portal</span>
-                </Link>
-              </div>
-
-              <Link
-                href="/"
-                onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
-              >
-                <Home className="w-3.5 h-3.5 text-slate-400" />
-                <span>Public Website</span>
-              </Link>
-
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUserMenuOpen(false);
-                  router.push("/login");
-                }}
-                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Bottom User Profile Section with Role Switcher */}
+        <SidebarUserProfile
+          currentPortal="customer"
+          sidebarCollapsed={sidebarCollapsed}
+          customProfile={
+            customer
+              ? {
+                  org: customer.tradingName || customer.legalBusinessName,
+                  detail: customer.nzbn ? `NZBN: ${customer.nzbn}` : "Trade Customer",
+                }
+              : undefined
+          }
+        />
       </aside>
 
       {/* ================= RIGHT MAIN LAYOUT ================= */}

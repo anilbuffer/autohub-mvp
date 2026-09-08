@@ -48,6 +48,7 @@ import {
   AuditLogEntry,
 } from "@/lib/types";
 import { PortalNavSwitcher } from "@/components/PortalNavSwitcher";
+import { SidebarUserProfile } from "@/components/SidebarUserProfile";
 
 interface NavItem {
   label: string;
@@ -77,7 +78,6 @@ export default function AdministratorLayout({
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -108,7 +108,6 @@ export default function AdministratorLayout({
       }
       if (e.key === "Escape") {
         setSearchModalOpen(false);
-        setUserMenuOpen(false);
         setNotifDropdownOpen(false);
         setActionDropdownOpen(false);
       }
@@ -360,84 +359,11 @@ export default function AdministratorLayout({
           </div>
         </div>
 
-        {/* Bottom User Profile Section */}
-        <div className="p-3 sm:p-4 border-t border-slate-800/80 relative">
-          <div
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-800/60 cursor-pointer transition"
-          >
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
-                AH
-              </div>
-              {!sidebarCollapsed && (
-                <div className="overflow-hidden">
-                  <div className="text-xs font-bold text-white truncate leading-tight">
-                    Autohub Admin
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-medium truncate">
-                    Operations Desk
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {!sidebarCollapsed && (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-            )}
-          </div>
-
-          {/* User Popover Menu */}
-          {userMenuOpen && (
-            <div className="absolute bottom-16 left-3 right-3 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl space-y-1 text-xs text-slate-300 z-50 animate-scaleIn">
-              <div className="px-3 py-2 border-b border-slate-800 text-[11px]">
-                <div className="font-bold text-white">Autohub Admin Console</div>
-                <div className="text-slate-400 font-mono text-[10px]">Unified Operations &amp; Governance</div>
-              </div>
-
-              <Link
-                href="/admin/settings"
-                onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
-              >
-                <Settings className="w-3.5 h-3.5 text-slate-400" />
-                <span>System Settings</span>
-              </Link>
-
-              <Link
-                href="/portal"
-                onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
-              >
-                <Users className="w-3.5 h-3.5 text-blue-400" />
-                <span>Customer Portal View</span>
-              </Link>
-
-              <div className="border-t border-slate-800 pt-1 mt-1">
-                <Link
-                  href="/"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition"
-                >
-                  <Home className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Public Website</span>
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    router.push("/login");
-                  }}
-                  className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Bottom User Profile Section with Role Switcher */}
+        <SidebarUserProfile
+          currentPortal="admin"
+          sidebarCollapsed={sidebarCollapsed}
+        />
       </aside>
 
       {/* ================= RIGHT MAIN LAYOUT ================= */}
