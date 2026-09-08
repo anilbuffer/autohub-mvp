@@ -28,6 +28,11 @@ import {
   Settings,
   LucideIcon,
   Compass,
+  LayoutDashboard,
+  BarChart3,
+  FileText,
+  Briefcase,
+  CheckCircle2,
 } from "lucide-react";
 import { getStoredRequests, subscribeToStore, setActiveRole } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
@@ -109,28 +114,40 @@ export default function OperationsLayout({
   };
 
   const getPageTitle = () => {
-    if (pathname === "/operations") return "Logistics Command Center";
-    if (pathname === "/operations/shipments") return "Shipment Milestones";
-    if (pathname === "/operations/freight") return "Freight Tariffs & Landed Cost";
-    if (pathname === "/operations/exceptions") return "Customs & Biosecurity Holds";
+    if (pathname === "/operations") return "Dashboard";
+    if (pathname === "/operations/freight") return "Freight Options";
+    if (pathname === "/operations/shipments") return "Shipments";
+    if (pathname === "/operations/tracking") return "Tracking";
+    if (pathname === "/operations/delivery") return "Delivery Confirmation";
+    if (pathname === "/operations/exceptions") return "Exceptions";
     return "Operations Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "LOGISTICS DESK",
+      group: "OPERATIONS (LOGISTICS)",
       items: [
-        { label: "Dashboard", href: "/operations", icon: Activity },
+        { label: "Dashboard", href: "/operations", icon: LayoutDashboard },
+        { label: "Freight Options", href: "/operations/freight", icon: Anchor },
         {
-          label: "Shipment Milestones",
+          label: "Shipments",
           href: "/operations/shipments",
           icon: Truck,
           badge: inTransitCount > 0 ? inTransitCount : undefined,
           badgeColor: "bg-[#ed2025]",
         },
-        { label: "Freight & Landed Cost", href: "/operations/freight", icon: Anchor },
         {
-          label: "Customs & Exceptions",
+          label: "Tracking",
+          href: "/operations/tracking",
+          icon: Compass,
+        },
+        {
+          label: "Delivery Confirmation",
+          href: "/operations/delivery",
+          icon: FileCheck,
+        },
+        {
+          label: "Exceptions",
           href: "/operations/exceptions",
           icon: AlertTriangle,
           badge: customsHoldsCount > 0 ? `${customsHoldsCount} Holds` : undefined,
@@ -139,16 +156,12 @@ export default function OperationsLayout({
       ],
     },
     {
-      group: "SUPPLY CHAIN",
+      group: "SHARED WORKSPACE",
       items: [
-        { label: "Procurement Queue", href: "/procurement/queue", icon: Compass },
-        { label: "Supplier Purchase Orders", href: "/procurement/orders", icon: Box },
-      ],
-    },
-    {
-      group: "SUPPORT",
-      items: [
-        { label: "Operations Guide", href: "#help", icon: HelpCircle, isModal: true },
+        { label: "Global Request Queue", href: "/admin/requests", icon: Briefcase },
+        { label: "Request Workspace", href: "/portal/requests", icon: FileText },
+        { label: "Audit History", href: "/admin/audit", icon: Clock },
+        { label: "Reporting", href: "/admin/reports", icon: BarChart3 },
       ],
     },
   ];

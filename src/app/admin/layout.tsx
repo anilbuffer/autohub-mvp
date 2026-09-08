@@ -28,6 +28,9 @@ import {
   PackageCheck,
   BadgePercent,
   Layers,
+  Mail,
+  Scale,
+  Database,
 } from "lucide-react";
 import {
   getStoredRequests,
@@ -115,28 +118,6 @@ export default function AdministratorLayout({
   }, []);
 
   // Compute live badges
-  const activeRequestsCount = requests.filter(
-    (r) => r.status === "SUBMITTED" || r.status === "SOURCING"
-  ).length;
-
-  const awaitingQuotesCount = requests.filter(
-    (r) => r.status === "QUOTE_PREPARED" || r.status === "AWAITING_CUSTOMER_APPROVAL"
-  ).length;
-
-  const procurementReadyCount = requests.filter(
-    (r) => r.status === "PAYMENT_CONFIRMED"
-  ).length;
-
-  const inTransitShipmentsCount = requests.filter(
-    (r) =>
-      r.status === "SUPPLIER_DISPATCHED" ||
-      r.status === "RECEIVED_AT_SHIPPING_FACILITY" ||
-      r.status === "IN_TRANSIT" ||
-      r.status === "ARRIVED_IN_NZ" ||
-      r.status === "CUSTOMS_CLEARANCE" ||
-      r.status === "OUT_FOR_DELIVERY"
-  ).length;
-
   const pendingApprovalsCount = customers.filter(
     (c) => c.billingDetails.status === "PENDING_APPROVAL"
   ).length;
@@ -150,7 +131,16 @@ export default function AdministratorLayout({
 
   // Derive dynamic page title
   const getPageTitle = () => {
-    if (pathname === "/admin") return "Operational Dashboard";
+    if (pathname === "/admin") return "Dashboard";
+    if (pathname === "/admin/staff") return "Staff Management";
+    if (pathname === "/admin/customers") return "Customer Approvals";
+    if (pathname === "/admin/settings") return "System Configuration";
+    if (pathname === "/admin/notifications") return "Notification Templates";
+    if (pathname === "/admin/email") return "Email Configuration (Microsoft 365)";
+    if (pathname === "/admin/legal") return "Legal & Policies";
+    if (pathname === "/admin/audit") return "Audit Log";
+    if (pathname === "/admin/reports") return "Reports & Analytics";
+    if (pathname === "/admin/reference-data") return "Reference Data";
     if (pathname === "/admin/requests") return "Parts Request Management";
     if (pathname === "/admin/supplier-quotes") return "Supplier Quote Management";
     if (pathname === "/admin/customer-quotes") return "Customer Quote Management";
@@ -158,19 +148,12 @@ export default function AdministratorLayout({
     if (pathname === "/admin/procurement") return "Procurement Workflow";
     if (pathname === "/admin/shipments") return "Shipment Tracking";
     if (pathname === "/admin/payments") return "Payment & Trade Credit Management";
-    if (pathname === "/admin/customers") return "Customer Account Management";
-    if (pathname === "/admin/messaging") return "Operational Messaging Desk";
-    if (pathname === "/admin/notifications") return "Notification Templates";
-    if (pathname === "/admin/staff") return "Staff & Permissions";
-    if (pathname === "/admin/audit") return "Audit Trail & Compliance";
-    if (pathname === "/admin/reports") return "Executive Reports & Analytics";
-    if (pathname === "/admin/settings") return "System Settings";
-    return "Administration Portal";
+    return "Administrator Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "OPERATIONS",
+      group: "ADMINISTRATOR",
       items: [
         {
           label: "Dashboard",
@@ -178,71 +161,23 @@ export default function AdministratorLayout({
           icon: LayoutDashboard,
         },
         {
-          label: "Parts Requests",
-          href: "/admin/requests",
-          icon: FileText,
-          badge: activeRequestsCount > 0 ? activeRequestsCount : undefined,
-          badgeColor: "bg-red-600",
-        },
-        {
-          label: "Supplier Quotes",
-          href: "/admin/supplier-quotes",
-          icon: Layers,
-        },
-        {
-          label: "Customer Quotes",
-          href: "/admin/customer-quotes",
-          icon: BadgePercent,
-          badge: awaitingQuotesCount > 0 ? awaitingQuotesCount : undefined,
-          badgeColor: "bg-amber-600",
-        },
-        {
-          label: "Procurement POs",
-          href: "/admin/procurement",
-          icon: PackageCheck,
-          badge: procurementReadyCount > 0 ? procurementReadyCount : undefined,
-          badgeColor: "bg-emerald-600",
-        },
-        {
-          label: "Freight & Rates",
-          href: "/admin/freight",
-          icon: Truck,
-        },
-        {
-          label: "Shipment Tracking",
-          href: "/admin/shipments",
-          icon: Compass,
-          badge: inTransitShipmentsCount > 0 ? inTransitShipmentsCount : undefined,
-          badgeColor: "bg-blue-600",
-        },
-      ],
-    },
-    {
-      group: "FINANCE & ACCOUNTS",
-      items: [
-        {
-          label: "Payments & Invoices",
-          href: "/admin/payments",
-          icon: Banknote,
-          badge: pendingPaymentsCount > 0 ? pendingPaymentsCount : undefined,
-          badgeColor: "bg-purple-600",
-        },
-        {
-          label: "Customer Accounts",
-          href: "/admin/customers",
+          label: "Staff Management",
+          href: "/admin/staff",
           icon: Users,
+          badge: activeStaffCount > 0 ? activeStaffCount : undefined,
+          badgeColor: "bg-slate-700",
+        },
+        {
+          label: "Customer Approvals",
+          href: "/admin/customers",
+          icon: ShieldCheck,
           badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined,
           badgeColor: "bg-rose-600",
         },
-      ],
-    },
-    {
-      group: "COMMUNICATIONS",
-      items: [
         {
-          label: "Messaging Desk",
-          href: "/admin/messaging",
-          icon: MessageSquare,
+          label: "System Configuration",
+          href: "/admin/settings",
+          icon: Settings,
         },
         {
           label: "Notification Templates",
@@ -251,32 +186,30 @@ export default function AdministratorLayout({
           badge: activeTemplatesCount,
           badgeColor: "bg-slate-700",
         },
-      ],
-    },
-    {
-      group: "SYSTEM & GOVERNANCE",
-      items: [
         {
-          label: "Staff & Permissions",
-          href: "/admin/staff",
-          icon: ShieldCheck,
-          badge: activeStaffCount,
-          badgeColor: "bg-slate-700",
+          label: "Email Configuration",
+          href: "/admin/email",
+          icon: Mail,
         },
         {
-          label: "Audit Trail",
+          label: "Legal & Policies",
+          href: "/admin/legal",
+          icon: Scale,
+        },
+        {
+          label: "Audit Log",
           href: "/admin/audit",
           icon: Clock,
         },
         {
-          label: "Reports & KPIs",
+          label: "Reports",
           href: "/admin/reports",
           icon: BarChart3,
         },
         {
-          label: "System Settings",
-          href: "/admin/settings",
-          icon: Settings,
+          label: "Reference Data",
+          href: "/admin/reference-data",
+          icon: Database,
         },
       ],
     },

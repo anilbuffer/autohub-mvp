@@ -26,6 +26,9 @@ import {
   ShieldCheck,
   User,
   LucideIcon,
+  LayoutDashboard,
+  RotateCcw,
+  BarChart3,
 } from "lucide-react";
 import { getStoredRequests, subscribeToStore, setActiveRole } from "@/lib/store";
 import { PartRequest } from "@/lib/types";
@@ -97,48 +100,41 @@ export default function FinanceLayout({
   };
 
   const getPageTitle = () => {
-    if (pathname === "/finance") return "Treasury & Clearing Console";
-    if (pathname === "/finance/payments") return "Remittance & Payment Matching";
-    if (pathname === "/finance/invoices") return "NZ IRD Tax Invoices";
-    if (pathname === "/finance/credit") return "Workshop Trade Credit Accounts";
-    if (pathname === "/finance/transactions") return "Double-Entry Transaction Ledger";
+    if (pathname === "/finance") return "Dashboard";
+    if (pathname === "/finance/payments") return "Payments Queue";
+    if (pathname === "/finance/invoices") return "Invoices & Receipts";
+    if (pathname === "/finance/refunds") return "Refunds";
+    if (pathname === "/finance/transactions") return "Ledger Transactions";
+    if (pathname === "/finance/reports") return "Financial Reports";
+    if (pathname === "/finance/credit") return "Trade Credit Accounts";
     return "Finance Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "TREASURY DESK",
+      group: "FINANCE (BILLING & CREDIT)",
       items: [
-        { label: "Treasury Console", href: "/finance", icon: Landmark },
+        { label: "Dashboard", href: "/finance", icon: LayoutDashboard },
         {
-          label: "Remittance Matching",
+          label: "Payments Queue",
           href: "/finance/payments",
           icon: CheckCircle2,
           badge: awaitingPaymentCount > 0 ? `${awaitingPaymentCount} Pending` : undefined,
           badgeColor: "bg-[#ed2025]",
         },
-        { label: "Tax Invoices (IRD)", href: "/finance/invoices", icon: Receipt },
-        {
-          label: "Trade Credit Accounts",
-          href: "/finance/credit",
-          icon: Building,
-          badge: "Net 20th",
-          badgeColor: "bg-blue-600",
-        },
-        { label: "Transaction Ledger", href: "/finance/transactions", icon: FileText },
+        { label: "Invoices & Receipts", href: "/finance/invoices", icon: Receipt },
+        { label: "Refunds", href: "/finance/refunds", icon: RotateCcw },
+        { label: "Ledger Transactions", href: "/finance/transactions", icon: FileText },
+        { label: "Financial Reports", href: "/finance/reports", icon: BarChart3 },
       ],
     },
     {
-      group: "GOVERNANCE",
+      group: "SHARED WORKSPACE",
       items: [
-        { label: "All Parts Requests", href: "/admin/requests", icon: Briefcase },
-        { label: "Supplier Orders", href: "/procurement/orders", icon: Scale },
-      ],
-    },
-    {
-      group: "SUPPORT",
-      items: [
-        { label: "Finance & GST Guide", href: "#help", icon: HelpCircle, isModal: true },
+        { label: "Global Request Queue", href: "/admin/requests", icon: Briefcase },
+        { label: "Request Workspace", href: "/portal/requests", icon: FileText },
+        { label: "Audit History", href: "/admin/audit", icon: Clock },
+        { label: "Reporting", href: "/admin/reports", icon: BarChart3 },
       ],
     },
   ];

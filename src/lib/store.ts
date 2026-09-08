@@ -900,7 +900,7 @@ export function createShipmentRecord(
 export function updateShipmentDetails(
   requestId: string,
   updates: Partial<ShipmentDetails>,
-  actorName: string
+  actorName: string = "Logistics Team"
 ) {
   const requests = getStoredRequests();
   const index = requests.findIndex((r) => r.id === requestId);
@@ -1718,6 +1718,7 @@ export function recordManualPayment(
         subtotalNzd: totalDue / 1.15,
         gstRate: 0.15,
         gstAmountNzd: totalDue - totalDue / 1.15,
+        gstNzd: totalDue - totalDue / 1.15,
         totalNzd: totalDue,
         partiallyPaidAmountNzd: amountReceived,
         status: newStatus,
@@ -2000,6 +2001,7 @@ export function generateTaxInvoiceForRequest(requestId: string, officerName: str
     subtotalNzd: subtotal,
     gstRate: 0.15,
     gstAmountNzd: gst,
+    gstNzd: gst,
     totalNzd: total,
     status: "PENDING",
   };

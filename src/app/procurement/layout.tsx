@@ -21,6 +21,11 @@ import {
   Layers,
   Sparkles,
   Box,
+  BadgePercent,
+  Clock,
+  BarChart3,
+  FileText,
+  Briefcase,
 } from "lucide-react";
 import {
   getStoredRequests,
@@ -86,17 +91,19 @@ export default function ProcurementPortalLayout({
   ).length;
 
   const getPageTitle = () => {
-    if (pathname === "/procurement") return "Sourcing Desk Console";
-    if (pathname === "/procurement/queue") return "Sourcing Intake & Quotes";
-    if (pathname === "/procurement/orders") return "Place Supplier Purchase Orders";
-    if (pathname === "/procurement/suppliers") return "Overseas Supplier Directory";
-    if (pathname === "/procurement/exceptions") return "Sourcing Exceptions & Advisories";
+    if (pathname === "/procurement") return "Dashboard";
+    if (pathname === "/procurement/queue") return "Sourcing Queue";
+    if (pathname === "/procurement/suppliers") return "Supplier Directory";
+    if (pathname === "/procurement/supplier-quotes") return "Supplier Quotes";
+    if (pathname === "/procurement/quote-builder") return "Quote Builder";
+    if (pathname === "/procurement/orders") return "Orders";
+    if (pathname === "/procurement/exceptions") return "Exceptions";
     return "Procurement Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "SOURCING DESK",
+      group: "PROCUREMENT (SOURCING DESK)",
       items: [
         { label: "Dashboard", href: "/procurement", icon: LayoutDashboard },
         {
@@ -107,13 +114,6 @@ export default function ProcurementPortalLayout({
           badgeColor: "bg-[#ed2025]",
         },
         {
-          label: "Supplier Purchase Orders",
-          href: "/procurement/orders",
-          icon: CheckSquare,
-          badge: ordersReadyCount > 0 ? ordersReadyCount : undefined,
-          badgeColor: "bg-emerald-600",
-        },
-        {
           label: "Supplier Directory",
           href: "/procurement/suppliers",
           icon: Building2,
@@ -121,12 +121,38 @@ export default function ProcurementPortalLayout({
           badgeColor: "bg-slate-700",
         },
         {
-          label: "Sourcing Exceptions",
+          label: "Supplier Quotes",
+          href: "/procurement/supplier-quotes",
+          icon: Layers,
+        },
+        {
+          label: "Quote Builder",
+          href: "/procurement/quote-builder",
+          icon: BadgePercent,
+        },
+        {
+          label: "Orders",
+          href: "/procurement/orders",
+          icon: CheckSquare,
+          badge: ordersReadyCount > 0 ? ordersReadyCount : undefined,
+          badgeColor: "bg-emerald-600",
+        },
+        {
+          label: "Exceptions",
           href: "/procurement/exceptions",
           icon: AlertTriangle,
           badge: exceptionsCount > 0 ? exceptionsCount : undefined,
           badgeColor: "bg-rose-600",
         },
+      ],
+    },
+    {
+      group: "SHARED WORKSPACE",
+      items: [
+        { label: "Global Request Queue", href: "/admin/requests", icon: Briefcase },
+        { label: "Request Workspace", href: "/portal/requests", icon: FileText },
+        { label: "Audit History", href: "/admin/audit", icon: Clock },
+        { label: "Reporting", href: "/admin/reports", icon: BarChart3 },
       ],
     },
   ];

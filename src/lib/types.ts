@@ -34,6 +34,14 @@ export type UserRole =
 
 export type FreightMethod = "AIR_EXPRESS" | "SEA_FREIGHT";
 
+export type ShipmentCarrier =
+  | "MAINFREIGHT"
+  | "DHL_EXPRESS"
+  | "AIR_NZ_CARGO"
+  | "MAERSK_LINE"
+  | "TOLL_GROUP"
+  | (string & {});
+
 export type PartCondition = "NEW_GENUINE" | "NEW_AFTERMARKET" | "RECONDITIONED_OEM" | "USED_TESTED";
 
 export interface SupplierProfile {
@@ -153,7 +161,7 @@ export interface TimelineEvent {
 
 export interface ShipmentDetails {
   id: string;
-  carrier: string;
+  carrier: ShipmentCarrier | string;
   trackingNumber: string;
   originPort: string;
   destinationPort: string;
@@ -161,6 +169,7 @@ export interface ShipmentDetails {
   customsEntryNumber?: string;
   etd: string;
   eta: string;
+  carrierEta?: string;
   actualDeliveryDate?: string;
   podSignatureUrl?: string;
   podDocketNumber?: string;
@@ -224,8 +233,10 @@ export interface FinancialTransaction {
 }
 
 export interface TaxInvoice {
+  id?: string;
   invoiceNumber: string; // e.g. "INV-2026-00842"
   dateIssued: string;
+  issueDate?: string;
   dueDate: string;
   paidDate?: string;
   customerName: string;
@@ -237,6 +248,7 @@ export interface TaxInvoice {
   subtotalNzd: number;
   gstRate: number; // 0.15
   gstAmountNzd: number;
+  gstNzd?: number;
   totalNzd: number;
   partiallyPaidAmountNzd?: number;
   receiptNumber?: string;

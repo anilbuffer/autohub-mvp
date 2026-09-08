@@ -27,6 +27,8 @@ import {
   LucideIcon,
   Home,
   Compass,
+  Receipt,
+  BadgePercent,
 } from "lucide-react";
 import {
   getStoredCustomers,
@@ -107,6 +109,10 @@ export default function CustomerPortalLayout({
     (r) => r.status === "AWAITING_CUSTOMER_APPROVAL" || r.status === "AWAITING_PAYMENT" || r.status === "PAYMENT_DISPUTED"
   ).length;
 
+  const quotesAwaitingApprovalCount = requests.filter(
+    (r) => r.status === "AWAITING_CUSTOMER_APPROVAL" || r.status === "QUOTE_PREPARED"
+  ).length;
+
   const inTransitCount = requests.filter(
     (r) => r.status === "IN_TRANSIT" || r.status === "CUSTOMS_CLEARANCE" || r.status === "SUPPLIER_DISPATCHED"
   ).length;
@@ -116,39 +122,35 @@ export default function CustomerPortalLayout({
   // Derive dynamic page title
   const getPageTitle = () => {
     if (pathname === "/portal") return "Dashboard";
-    if (pathname === "/portal/new-request") return "Submit New Part Request";
-    if (pathname === "/portal/requests") return "Procurement Requests";
+    if (pathname === "/portal/new-request") return "New Part Request";
+    if (pathname === "/portal/requests") return "My Requests";
     if (pathname.startsWith("/portal/requests/")) return "Request Details";
+    if (pathname === "/portal/quotes") return "Quotes";
+    if (pathname === "/portal/payments") return "Payments";
+    if (pathname === "/portal/invoices") return "Invoices & Receipts";
     if (pathname === "/portal/shipments") return "Shipment Tracking";
-    if (pathname === "/portal/messages") return "Messages & Sourcing Inquiries";
-    if (pathname === "/portal/payments") return "Payments & Trade Credit";
-    if (pathname === "/portal/notifications") return "Notifications Inbox";
-    if (pathname === "/portal/settings") return "Account Settings & Address Book";
+    if (pathname === "/portal/messages") return "Messages";
+    if (pathname === "/portal/notifications") return "Notifications";
+    if (pathname === "/portal/profile") return "Company Profile";
+    if (pathname === "/portal/settings") return "Account Settings";
     return "Customer Portal";
   };
 
   const navGroups: NavGroup[] = [
     {
-      group: "MAIN",
+      group: "CUSTOMER PORTAL",
       items: [
         { label: "Dashboard", href: "/portal", icon: LayoutDashboard },
-        { label: "Requests", href: "/portal/requests", icon: FileText, badge: actionRequiredCount || 3, badgeColor: "bg-rose-500" },
-        { label: "Shipments", href: "/portal/shipments", icon: Truck, badge: inTransitCount || 2, badgeColor: "bg-blue-500" },
-        { label: "Messages", href: "/portal/messages", icon: MessageSquare, badge: 2, badgeColor: "bg-blue-600" },
+        { label: "New Part Request", href: "/portal/new-request", icon: Plus },
+        { label: "My Requests", href: "/portal/requests", icon: FileText, badge: actionRequiredCount || undefined, badgeColor: "bg-rose-500" },
+        { label: "Quotes", href: "/portal/quotes", icon: BadgePercent, badge: quotesAwaitingApprovalCount || undefined, badgeColor: "bg-amber-600" },
         { label: "Payments", href: "/portal/payments", icon: CreditCard },
-      ],
-    },
-    {
-      group: "ACCOUNT",
-      items: [
-        { label: "Notifications", href: "/portal/notifications", icon: Bell, badge: 24, badgeColor: "bg-slate-700" },
-        { label: "Settings", href: "/portal/settings", icon: Settings },
-      ],
-    },
-    {
-      group: "SUPPORT",
-      items: [
-        { label: "Help & Support", href: "#help", icon: HelpCircle, isModal: true },
+        { label: "Invoices & Receipts", href: "/portal/invoices", icon: Receipt },
+        { label: "Shipment Tracking", href: "/portal/shipments", icon: Truck, badge: inTransitCount || undefined, badgeColor: "bg-blue-500" },
+        { label: "Messages", href: "/portal/messages", icon: MessageSquare, badge: 2, badgeColor: "bg-blue-600" },
+        { label: "Notifications", href: "/portal/notifications", icon: Bell, badge: unreadNotifsCount || undefined, badgeColor: "bg-slate-700" },
+        { label: "Company Profile", href: "/portal/profile", icon: Building2 },
+        { label: "Account Settings", href: "/portal/settings", icon: Settings },
       ],
     },
   ];
